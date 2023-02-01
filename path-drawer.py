@@ -4,9 +4,6 @@
 # Lots of old scraps of code from moot tests and ideas. 
 # Author: Connor Hickton
 import pygame
-import win32con
-import win32gui
-
 from pygame.locals import *
 
 # BREAKVAL is the distance in pixels which quantifies "enough movement" after a direction change,
@@ -96,6 +93,7 @@ while not done: # main game loop
     
     lastdir = direction
 
+    # this next if statement is a verbatim port of the direction algorithm described in the paper mentioned earlier (Banihashem et al, 2013)
     if (coords is not None and popped is not None):
         
         if (coords[0] > popped[0]):
@@ -123,11 +121,12 @@ while not done: # main game loop
                 direction = "down left"
 
 
-    print(direction)
+    # print(direction)
 
 
     # Breakpoint Detection
-    # Before you go to sleep, explain it - you were having issues knowing what timeframes you were supposed to compare. Are you comparing to last frame,
+    # Rambling to myself, ensuring breakpoints weren't bugged:
+    # you were having issues knowing what timeframes you were supposed to compare. Are you comparing to last frame,
     # or a half-second ago? (also you wouldn't be measuring by seconds, but frames instead. Nothing time-related programmed yet)
     #
     # Breakpoints aren't quite appearing where you want them to. Probably a math bug, at least as my guess.
@@ -138,17 +137,17 @@ while not done: # main game loop
     # maybe if there was a breakpoint less than the half second ago, check against the last breakpoint rather than the 0.5 second coord?
 
     if (direction != lastdir and (abs(coords[0] - popped[0])> BREAKVAL or abs(coords[1] - popped[1]) > BREAKVAL)):
-        print("BREAKPOINT DETECTED!!!")
+        # print("BREAKPOINT DETECTED!!!")
                                         # v - I already tried changing this to popped instead of coords, but neither put the breakpoints right where I expect them.
         pygame.draw.circle(screen, "red", coords, 5, 2)
 
 
-    
+    # draws a gray circle if the direction is stopped
     elif (direction == "stop"):
-        pygame.draw.circle(screen, "white", coords, 5, 2)
+        pygame.draw.circle(screen, "gray", coords, 5, 2)
         
     
-    print("\n")
+    # print("\n")
 
     pygame.display.update()
 

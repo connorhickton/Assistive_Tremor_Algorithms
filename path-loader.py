@@ -4,8 +4,6 @@
 # 
 
 import pygame
-import win32con
-import win32gui
 import json
 import time
 
@@ -26,20 +24,18 @@ BREAKVAL = 4
 LISTLEN = 30
 
 
-
 # load json file
 # User 258 is identified in the data as able-bodied and skilled enough with a mouse. Good subject to use to sanity-check that targets are appearing in the right place
 # New: tkinter opens a file explorer box, and you can choose which file to open.
 Tk().withdraw()
 filename = askopenfilename(initialdir='mouseandtouchinput-master/alldata')
-
-
 f = open(filename)
-
 data = json.load(f)
+
 
 # Open a window that's the same size as the working area of the participant's window.
 # My monitors are very high-res, so the boxes have always been small enough to see the entirety of.
+# Needs the JSON file to find out what the user's window's width/height were.
 screenAvailWidth = data["screenAvailWidth"]
 screenAvailHeight = data["screenAvailHeight"]
 
@@ -56,32 +52,30 @@ def rectify(center_x, center_y, width, height):
     return Rect(left, top, width, height)
 """
 
-
 pygame.init()
 screen = pygame.display.set_mode((screenAvailWidth, screenAvailHeight))   # setting to 0,0 will default to the screen's resolution
                                                 # add , pygame.NOFRAME after coords for borderless
-done = False
+
 
 
 pygame.display.set_caption('Pygame Mouse Replaying Prototype')
 
 # Create layered window
-hwnd = pygame.display.get_wm_info()["window"]
-win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
-                       win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
-
-
-
+# hwnd = pygame.display.get_wm_info()["window"]
+# win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
+#                        win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
 
 # https://pythonprogramming.altervista.org/how-to-make-a-fully-transparent-window-with-pygame/?doing_wp_cron=1674556950.6755940914154052734375
 
+
+
+
 direction = ""
 lastdir = ""
+# "prev" is a linked list of the last LISTLEN + 1 coordinates that the mouse has been at.
 prev = [None] * (LISTLEN + 1)
 
-# this counter and sum stuff is trying to find the average time between frames - if it's anywhere near 16, that confirms 60fps - otherwise it's event-based and that sucks
-# update: it's probably event-based and that sucks lmao. First trial has a frame once every 25.44047619047619 ms on average.
-counter = 0
+# tracks the time that the previous mouse event happened at (in ms). Starts at the time the trial began, in ms since epoch
 last = data['startTime']
 
 # Main game loop. Iterates through each of the "trials" stored in the JSON files.
