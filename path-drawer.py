@@ -7,6 +7,9 @@ import pygame
 from pygame.locals import *
 import json
 import time
+import numpy as np
+from scipy.interpolate import BSpline, splrep, splev
+import matplotlib.pyplot as plt
 
 # BREAKVAL is the distance in pixels which quantifies "enough movement" after a direction change,
 # according to the paper, "Real Time Break Point Detection Technique (RBPD) in Computer Mouse Trajectory".
@@ -70,6 +73,7 @@ pygame.display.set_caption('Pygame Mouse Tracking Prototype')
 direction = ""
 lastdir = ""
 prev = [None] * (LISTLEN + 1)
+breakpoints = []
 # i = 0
 counter = 0
 
@@ -100,7 +104,7 @@ while not done: # main game loop
     if (popped is not None):
         #prev.remove(popped)
         #screen.set_at(popped, "black")  #"black" is just because it's the background colour. Ideally, change this to transparency
-        pygame.draw.line(screen, "blue", prev[-2], popped, 3)
+        pygame.draw.line(screen, "blue", prev[-1], popped, 2)
         
         
     
@@ -173,6 +177,9 @@ while not done: # main game loop
         # print("BREAKPOINT DETECTED!!!")
                                         # v - I already tried changing this to popped instead of coords, but neither put the breakpoints right where I expect them.
         pygame.draw.circle(screen, "red", coords, 5, 2)
+        
+        
+        breakpoints.insert(0, coords)
 
 
     # draws a gray circle if the direction is stopped
@@ -196,6 +203,22 @@ while not done: # main game loop
         
     }
 
+    # first, very naive attempt at making splines. Didn't work (yet?)
+    """
+    if (event.type == pygame.MOUSEBUTTONUP):
+        # print("Click!")
+        print(breakpoints)
+        bpx = (list(zip(*breakpoints))[0])
+        bpy = (list(zip(*breakpoints))[1])
+
+        tck = splrep(bpx, bpy, t=bpx[2:-2], k=3)
+        ys_interp = splev(bpx, tck)
+
+        plt.figure(figsize=(12, 6))
+        plt.plot(bpx, bpy, '.c')
+        plt.plot(bpx, ys_interp, '-m')
+        plt.show()
+    """
 
     output["trials"][0]["mouseEvents"].update(addCoord)
 

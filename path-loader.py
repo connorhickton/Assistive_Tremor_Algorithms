@@ -21,7 +21,7 @@ BREAKVAL = 4
 # Correlates with time, but I don't know the exact translation at the moment. According to the paper, this should be half a second's worth of coordinates.
 # The datasets being loaded do not have a consistent framerate. It's likely the recorded data is event-based. This messes with the data and breakpoint algorithm. 
 # My base assumption is that most people's screens are 60fps. So 30 would be half a second's worth.
-LISTLEN = 30
+LISTLEN = 10
 
 
 # load json file
@@ -77,16 +77,16 @@ prev = [None] * (LISTLEN + 1)
 
 # tracks the time that the previous mouse event happened at (in ms). Starts at the time the trial began, in ms since epoch
 last = data['startTime']
-print(last)
+#print(last)
 
 # AWFUL code that lets me put off understanding the awful mix of list/dicts/json that the original dataset is made of. So this program can just read both...
 keysAreStrings = False
 try:
     keys = list(data["trials"].keys())
-    print(keys)
+    #print(keys)
     if (type(keys[0]) == str):
         keysAreStrings = True
-        print("KEY IS STRING")
+        #print("KEY IS STRING")
 except:
     pass
 
@@ -124,12 +124,12 @@ for h in range(len(data["trials"])):
         if (keysAreStrings):
             j = data['trials'][h]['mouseEvents'][str(count)]
         
-        print("this is j: ",j, " and j is type: ", type(j))
+        #print("this is j: ",j, " and j is type: ", type(j))
 
         # bad but working way to space out the events to show the proper timing when the data was recorded
         time.sleep((j["t"] - last)/1000)
         last = j["t"]
-        print (j["t"], "     ", (j["t"] - last))
+        #print (j["t"], "     ", (j["t"] - last))
 
         # press ESC to exit the window at any time
         for event in pygame.event.get():
@@ -172,7 +172,7 @@ for h in range(len(data["trials"])):
 
         # this next if statement is a verbatim port of the direction algorithm described in the paper mentioned earlier (Banihashem et al, 2013)
         if (coords is not None and popped is not None):
-            
+            # print (type(coords))
             if (coords[0] > popped[0]):
                 if (coords[1] == popped[1]):
                     direction = "right"
