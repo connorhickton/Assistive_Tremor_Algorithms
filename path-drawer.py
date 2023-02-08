@@ -5,6 +5,8 @@
 # Author: Connor Hickton
 import pygame
 from pygame.locals import *
+import json
+import time
 
 # BREAKVAL is the distance in pixels which quantifies "enough movement" after a direction change,
 # according to the paper, "Real Time Break Point Detection Technique (RBPD) in Computer Mouse Trajectory".
@@ -18,9 +20,37 @@ LISTLEN = 20
 # https://stackoverflow.com/questions/67963353/how-to-set-framerate-in-pygame
 FPS = 60
 
+SCREENWIDTH = 1920
+SCREENHEIGHT = 1080
+
+
+output = {
+    "taskName": "Drawing",
+    "trials": {
+        0: {
+            "mouseEvents": {
+
+            }
+        }
+    },
+    "screenAvailWidth": SCREENWIDTH,
+    "screenAvailHeight": SCREENHEIGHT,
+    "startTime": (int)(time.time() * 1000)
+    
+}
+
+# exports the program's recorded mouse movements to a json file when the program is closed.
+def export(output):
+    endTimeAdd = {"endTime": (int)(time.time() * 1000)}
+    output.update(endTimeAdd)
+    with open("Assistive_Tremor_Algorithms/test.json", "w") as outfile:
+        json.dump(output, outfile)
+
+
+
 pygame.init()
 info = pygame.display.Info()
-screen = pygame.display.set_mode((1920, 1080))   # setting to 0,0 will default to the screen's resolution
+screen = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))   # setting to 0,0 will default to the screen's resolution. Windows scaling can make that wonky though.
                                                 # add , pygame.NOFRAME after coords for borderless
 done = False
 
@@ -41,6 +71,7 @@ direction = ""
 lastdir = ""
 prev = [None] * (LISTLEN + 1)
 # i = 0
+counter = 0
 
 while not done: # main game loop
     
@@ -48,9 +79,11 @@ while not done: # main game loop
 
     for event in pygame.event.get():
         if event.type == QUIT:
+            export(output)
             done = True
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                export(output)
                 done = True
     
     # print("Coord to Remove: ", prev[LISTLEN])
@@ -146,8 +179,29 @@ while not done: # main game loop
     elif (direction == "stop"):
         pygame.draw.circle(screen, "gray", coords, 5, 2)
         
+    mouseAction = "mousemove"
+
+    if (counter == 0):
+        mouseAction = "mouseenter"
     
+    addCoord = {
+        counter: {
+            "e": mouseAction,
+            "t": (int)(time.time() * 1000),
+            "p": {
+                "X": coords[0],
+                "Y": coords[1]
+            }
+        }
+        
+    }
+
+
+    output["trials"][0]["mouseEvents"].update(addCoord)
+
     # print("\n")
+
+    counter += 1
 
     pygame.display.update()
 

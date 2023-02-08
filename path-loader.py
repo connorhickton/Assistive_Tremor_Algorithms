@@ -77,9 +77,25 @@ prev = [None] * (LISTLEN + 1)
 
 # tracks the time that the previous mouse event happened at (in ms). Starts at the time the trial began, in ms since epoch
 last = data['startTime']
+print(last)
+
+# AWFUL code that lets me put off understanding the awful mix of list/dicts/json that the original dataset is made of. So this program can just read both...
+keysAreStrings = False
+try:
+    keys = list(data["trials"].keys())
+    print(keys)
+    if (type(keys[0]) == str):
+        keysAreStrings = True
+        print("KEY IS STRING")
+except:
+    pass
+
 
 # Main game loop. Iterates through each of the "trials" stored in the JSON files.
 for h in range(len(data["trials"])):
+
+    if (keysAreStrings):
+        h = str(h)
 
     # refresh display after each set of targets
     screen.fill("black")
@@ -102,11 +118,18 @@ for h in range(len(data["trials"])):
     # Secondary game loop. Iterates through mouse events stored in the opened JSON file.
     # TODO: time.sleep() is an improper way to use pygame. Change pygame to use pygame.time.get_ticks(), as per the top stackoverflow comment:
     # https://stackoverflow.com/questions/59888769/pygame-screen-not-updating-after-each-element-is-added
+    count = 0
     for j in data['trials'][h]['mouseEvents']:
         
+        if (keysAreStrings):
+            j = data['trials'][h]['mouseEvents'][str(count)]
+        
+        print("this is j: ",j, " and j is type: ", type(j))
+
         # bad but working way to space out the events to show the proper timing when the data was recorded
         time.sleep((j["t"] - last)/1000)
         last = j["t"]
+        print (j["t"], "     ", (j["t"] - last))
 
         # press ESC to exit the window at any time
         for event in pygame.event.get():
@@ -127,7 +150,7 @@ for h in range(len(data["trials"])):
         if (popped is not None):
             #prev.remove(popped)
             #screen.set_at(popped, "black")  #"black" is just because it's the background colour. Ideally, change this to transparency
-            pygame.draw.line(screen, "blue", prev[-2], popped, 3)
+            pygame.draw.line(screen, "blue", prev[-1], popped, 3)
             
             
         # get next set of mouse coords from JSON
@@ -198,6 +221,8 @@ for h in range(len(data["trials"])):
             pygame.draw.circle(screen, "white", coords, 8, 4)
         
         # print("\n")
+        
+        count += 1
 
         pygame.display.update()
 
