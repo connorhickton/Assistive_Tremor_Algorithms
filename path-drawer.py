@@ -163,7 +163,7 @@ while not done: # main game loop
     """
 
     # second attempt at b splines
-    # it kinda works!!! still just in matplotlib though
+    # it kinda works!!!
     if (event.type == pygame.MOUSEBUTTONUP):
         ctr = np.array(breakpoints)
 
@@ -179,15 +179,19 @@ while not done: # main game loop
         u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
         out = scipy.interpolate.splev(u3,tck)
 
-        print(out)
+        #print(" HERE HERE: ", out[0][0])
 
+        for i in range(len(out[0]) - 1):
+            pygame.draw.line(screen, "yellow", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  1)
+
+        """
         plt.plot(x,y,'k--',label='Control polygon',marker='o',markerfacecolor='red')
         plt.plot(out[0],out[1],'b',linewidth=2.0,label='B-spline curve')
         plt.legend(loc='best')
         plt.axis([min(x)-1, max(x)+1, min(y)-1, max(y)+1])
         plt.title('Cubic B-spline curve evaluation')
         plt.show()
-
+        """
 
 
     output["trials"][0]["mouseEvents"].update(addCoord)
