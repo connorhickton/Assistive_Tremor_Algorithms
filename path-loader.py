@@ -16,11 +16,11 @@ from breakpointtests import *
 # BREAKVAL is the distance in pixels which quantifies "enough movement" after a direction change,
 # according to the paper, "Real Time Break Point Detection Technique (RBPD) in Computer Mouse Trajectory".
 # The values for "m" (equal to BREAKVAL in this code) are 2, 3, 4, 7, 10 - with 4 being for "medial levels of tremor"
-BREAKVAL = 4
+BREAKVAL = getBreakVal()
 
 
 # The closest recorded coordinate that was X seconds ago
-TIME_COMPARE_SECONDS = 0.5
+TIME_COMPARE_SECONDS = getTimeCmp()
 
 
 # load json file
@@ -103,12 +103,13 @@ for h in range(len(data["trials"])):
         if (keysAreStrings):
             j = data['trials'][h]['mouseEvents'][str(count)]
         
-        #print("this is j: ",j, " and j is type: ", type(j))
+        else:
+            #print("this is j: ",j, " and j is type: ", type(j))
 
-        # bad but working way to space out the events to show the proper timing when the data was recorded
-        time.sleep((j["t"] - last)/1000)
-        last = j["t"]
-        #print (j["t"], "     ", (j["t"] - last))
+            # bad but working way to space out the events to show the proper timing when the data was recorded
+            time.sleep((j["t"] - last)/1000)
+            last = j["t"]
+            #print (j["t"], "     ", (j["t"] - last))
 
         # press ESC to exit the window at any time
         for event in pygame.event.get():
@@ -134,10 +135,20 @@ for h in range(len(data["trials"])):
 
         direction = getDirection(coordList[0][0], oldElement)
 
+
+        # breakpoint 1 code
+        """
         if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
             # print("BREAKPOINT DETECTED!!!")
             breakpoints.insert(0, coords)
+        """
 
+        # breakpoint2 code
+        checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
+        if (checkBreakpoint is not False):
+            breakpoints.insert(0, checkBreakpoint)
+
+        # """"
         
         if (len(breakpoints) > 2):
             for i in range(len(breakpoints)):

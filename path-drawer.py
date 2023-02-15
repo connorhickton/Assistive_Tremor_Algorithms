@@ -8,6 +8,7 @@ from pygame.locals import *
 import json
 import time
 import numpy as np
+import scipy.interpolate
 from scipy.interpolate import BSpline, splrep, splev
 import matplotlib.pyplot as plt
 from breakpointtests import *
@@ -15,10 +16,10 @@ from breakpointtests import *
 # BREAKVAL is the distance in pixels which quantifies "enough movement" after a direction change,
 # according to the paper, "Real Time Break Point Detection Technique (RBPD) in Computer Mouse Trajectory".
 # The values for "m" (equal to BREAKVAL in this code) are 2, 3, 4, 7, 10 - with 4 being for "medial levels of tremor"
-BREAKVAL = 4        
+BREAKVAL = getBreakVal()
 
 # The closest recorded coordinate that was X seconds ago
-TIME_COMPARE_SECONDS = 0.1
+TIME_COMPARE_SECONDS = getTimeCmp()
 
 
 SCREENWIDTH = 1920
@@ -92,7 +93,11 @@ while not done: # main game loop
 
     if (len(coordList) > 2):
         for i in range(len(coordList)-1):
+            
+            #if i < 50:
             pygame.draw.line(screen, "green", coordList[i][0], coordList[i+1][0], 1)
+            #else:
+                #pygame.draw.line(screen, "blue", coordList[i][0], coordList[i+1][0], 1)
 
     
     lastdir = direction
@@ -101,11 +106,18 @@ while not done: # main game loop
 
     direction = getDirection(coordList[0][0], oldElement)
 
+    # breakpoint1 code
+    
     if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
         # print("BREAKPOINT DETECTED!!!")
         breakpoints.insert(0, coords)
-        
-        
+    """ 
+
+    # breakpoint2 code
+    checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
+    if (checkBreakpoint is not False):
+        breakpoints.insert(0, checkBreakpoint)
+    """    
     
     if (len(breakpoints) > 2):
         for i in range(len(breakpoints)):
@@ -139,6 +151,8 @@ while not done: # main game loop
         bpx = (list(zip(*breakpoints))[0])
         bpy = (list(zip(*breakpoints))[1])
 
+        print(bpx)
+
         tck = splrep(bpx, bpy, t=bpx[2:-2], k=3)
         ys_interp = splev(bpx, tck)
 
@@ -147,6 +161,34 @@ while not done: # main game loop
         plt.plot(bpx, ys_interp, '-m')
         plt.show()
     """
+
+    # second attempt at b splines
+    # it kinda works!!! still just in matplotlib though
+    if (event.type == pygame.MOUSEBUTTONUP):
+        ctr = np.array(breakpoints)
+
+        x = ctr[:,0]
+        y = ctr[:,1]
+
+        l=len(x)
+        t=np.linspace(0,1,l-2,endpoint=True)
+        t=np.append([0,0,0],t)
+        t=np.append(t,[1,1,1])
+
+        tck=[t,[x,y],3]
+        u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
+        out = scipy.interpolate.splev(u3,tck)
+
+        print(out)
+
+        plt.plot(x,y,'k--',label='Control polygon',marker='o',markerfacecolor='red')
+        plt.plot(out[0],out[1],'b',linewidth=2.0,label='B-spline curve')
+        plt.legend(loc='best')
+        plt.axis([min(x)-1, max(x)+1, min(y)-1, max(y)+1])
+        plt.title('Cubic B-spline curve evaluation')
+        plt.show()
+
+
 
     output["trials"][0]["mouseEvents"].update(addCoord)
 
