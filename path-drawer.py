@@ -10,8 +10,9 @@ import time
 import numpy as np
 import scipy.interpolate
 from scipy.interpolate import BSpline, splrep, splev
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from breakpointtests import *
+from bsplinetest4 import *
 
 # BREAKVAL is the distance in pixels which quantifies "enough movement" after a direction change,
 # according to the paper, "Real Time Break Point Detection Technique (RBPD) in Computer Mouse Trajectory".
@@ -22,8 +23,8 @@ BREAKVAL = getBreakVal()
 TIME_COMPARE_SECONDS = getTimeCmp()
 
 
-SCREENWIDTH = 1920
-SCREENHEIGHT = 1080
+SCREENWIDTH = 1280
+SCREENHEIGHT = 720
 
 
 output = {
@@ -67,6 +68,7 @@ lastdir = ""
 
 coordList = []
 breakpoints = []
+meanBreakpoints = []
 
 counter = 0
 
@@ -111,18 +113,31 @@ while not done: # main game loop
     if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
         # print("BREAKPOINT DETECTED!!!")
         breakpoints.insert(0, coords)
-    """ 
+        
+        # mean filtering
+        if(len(breakpoints) > 1):
+            bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
+            by = int((breakpoints[0][1] + breakpoints[1][1])/2)
+            
+            meanBreakpoints.insert(0, (bx, by))
+
+    
+    """
 
     # breakpoint2 code
     checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
     if (checkBreakpoint is not False):
         breakpoints.insert(0, checkBreakpoint)
-    """    
+    """
     
     if (len(breakpoints) > 2):
         for i in range(len(breakpoints)):
             pygame.draw.circle(screen, "red", breakpoints[i], 5, 2)
-        
+
+    
+    if (len(meanBreakpoints) > 2):
+        for i in range(len(meanBreakpoints)):
+            pygame.draw.circle(screen, "purple", meanBreakpoints[i], 5, 2)
 
     
 
@@ -142,29 +157,10 @@ while not done: # main game loop
         }
         
     }
-
-    # first, very naive attempt at making splines. Didn't work (yet?)
     """
-    if (event.type == pygame.MOUSEBUTTONUP):
-        # print("Click!")
-        print(breakpoints)
-        bpx = (list(zip(*breakpoints))[0])
-        bpy = (list(zip(*breakpoints))[1])
-
-        print(bpx)
-
-        tck = splrep(bpx, bpy, t=bpx[2:-2], k=3)
-        ys_interp = splev(bpx, tck)
-
-        plt.figure(figsize=(12, 6))
-        plt.plot(bpx, bpy, '.c')
-        plt.plot(bpx, ys_interp, '-m')
-        plt.show()
-    """
-
     # second attempt at b splines
     # it kinda works!!!
-    if (event.type == pygame.MOUSEBUTTONUP):
+    if (event.type == pygame.MOUSEBUTTONUP or len(breakpoints) > 3):
         ctr = np.array(breakpoints)
 
         x = ctr[:,0]
@@ -183,14 +179,45 @@ while not done: # main game loop
 
         for i in range(len(out[0]) - 1):
             pygame.draw.line(screen, "yellow", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  1)
+    """
 
+    # second attempt at b splines
+    # it kinda works!!!
+    if (event.type == pygame.MOUSEBUTTONUP or len(meanBreakpoints) > 3):
+        ctr = np.array(meanBreakpoints)
+
+        x = ctr[:,0] # get all values from column 0 (the x values)
+        y = ctr[:,1] # get all values from column 1 (the y values)
+
+
+        #x = x[::-1]
+        #y = y[::-1]
+
+        l=len(x)
+        # print(l)
+   
+        
+        t=np.linspace(0,1,l-2,endpoint=True)
+        t=np.append([0,0,0],t)
+        t=np.append(t,[1,1,1])
+
+        tck=[t,[x,y],3]
+        u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
+        out = scipy.interpolate.splev(u3,tck)
+        
+        for i in range(len(out[0]) - 1):
+            pygame.draw.line(screen, "white", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
+        
         """
-        plt.plot(x,y,'k--',label='Control polygon',marker='o',markerfacecolor='red')
-        plt.plot(out[0],out[1],'b',linewidth=2.0,label='B-spline curve')
-        plt.legend(loc='best')
-        plt.axis([min(x)-1, max(x)+1, min(y)-1, max(y)+1])
-        plt.title('Cubic B-spline curve evaluation')
-        plt.show()
+        #print(" HERE HERE: ", out[0][0])
+
+        print(np.array([x,y]), "\nIs of type: ", type(np.array([x,y])))
+
+        newOut = bspline(np.array([x,y]), max(l*2,70), periodic=False)
+        print(newOut)
+
+        for i in range(len(newOut[0]) - 1):
+            pygame.draw.line(screen, "white", (newOut[0][i],newOut[1][i]), (newOut[0][i+1],newOut[1][i+1]),  3)
         """
 
 
