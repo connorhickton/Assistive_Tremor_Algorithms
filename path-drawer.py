@@ -7,12 +7,14 @@ import pygame
 from pygame.locals import *
 import json
 import time
+import math
+
 import numpy as np
 import scipy.interpolate
 from scipy.interpolate import BSpline, splrep, splev
 # import matplotlib.pyplot as plt
-from breakpointtests import *
-from bsplinetest4 import *
+from sharedfunctions import *
+# from bsplinetest4 import *
 
 # BREAKVAL is the distance in pixels which quantifies "enough movement" after a direction change,
 # according to the paper, "Real Time Break Point Detection Technique (RBPD) in Computer Mouse Trajectory".
@@ -90,8 +92,11 @@ while not done: # main game loop
 
     
     coords = pygame.mouse.get_pos()
-    
-    coordList.insert(0, (coords, int(time.time() * 1000)))
+
+    # Don't add repeated coordinates
+    if len(coordList) == 0 or coordList[0][0] != coords:
+        coordList.insert(0, (coords, int(time.time() * 1000)))
+
 
     if (len(coordList) > 2):
         for i in range(len(coordList)-1):
@@ -113,26 +118,37 @@ while not done: # main game loop
     if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
         # print("BREAKPOINT DETECTED!!!")
         breakpoints.insert(0, coords)
-        
+
         # mean filtering
         if(len(breakpoints) > 1):
             bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
             by = int((breakpoints[0][1] + breakpoints[1][1])/2)
             
             meanBreakpoints.insert(0, (bx, by))
-
     
     """
 
     # breakpoint2 code
     checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
     if (checkBreakpoint is not False):
-        breakpoints.insert(0, checkBreakpoint)
-    """
+        # pinpoint accurate, but places the point in the past. Not acceptable
+        # breakpoints.insert(0, checkBreakpoint)
+
+        # Real-time, but slight delay in point location
+        breakpoints.insert(0, coords)
+              
+        # mean filtering
+        if(len(breakpoints) > 1):
+            bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
+            by = int((breakpoints[0][1] + breakpoints[1][1])/2)
+            
+            meanBreakpoints.insert(0, (bx, by))
+    """  
+
     
     if (len(breakpoints) > 2):
         for i in range(len(breakpoints)):
-            pygame.draw.circle(screen, "red", breakpoints[i], 5, 2)
+            pygame.draw.circle(screen, "red", breakpoints[i], 3, 2)
 
     
     if (len(meanBreakpoints) > 2):
