@@ -1,11 +1,28 @@
 import math
+import numpy as np
 
 
 TIME_COMPARE_SECONDS = 0.5
 
-BREAKVAL = 4
+BREAKVAL = 3
 
 MAX_ANGLE = 90.0
+
+
+# Filter Types:
+# 0 means no filter
+# 1 means B-spline and breakpoint filtering, a la Banihashem et al
+# 2 means mean filtering/moving average
+# 3 means Double Exponential Smoothing filter
+FILTER_TYPE = 3
+
+# If FILTER_TYPE is 1 (B-spline and breakpoint), then you can choose between two breakpoint algorithms
+# 1 means Banihashem's breakpoint algorithm
+# 2 means Connor's (my own)
+
+BREAKPOINT_TYPE = 1
+
+
 
 
 
@@ -187,3 +204,124 @@ def breakpoint2(coordList, BREAKVAL, timeCmp):
         return coord2
     else:
         return False
+    
+# returns the next coordinate for a mean filter (moving average) of the mouse path, over a specified time window timeCmp
+def meanFilter(coordList, timeCmp):
+
+    lastElement = getOldElement(coordList, timeCmp)
+
+    if ((lastElement)) is not None:
+        lastIndex = coordList.index(lastElement)
+    
+    else:
+        return False
+
+    window = coordList[:lastIndex]
+
+    sumX = 0
+    sumY = 0
+    count = 0
+    for i in window:
+        #print(i)
+        sumX += i[0][0]
+        sumY += i[0][1]
+        count += 1
+
+    meanX = sumX / count
+    meanY = sumY / count
+
+    return (meanX, meanY)
+
+# ("Efficient jitter compensation using double exponential smoothing", Chung and Kim (2012))
+def alphaFunc(uk):
+
+    min = 0
+    max = 100
+
+    if (uk <= min):
+        return 0
+    elif (uk >= max):
+        return 1
+    elif (uk < max and uk > min):
+        return float(uk / max)
+
+# alphaFunc and gammaFunc ended up being the same in the paper
+def gammaFunc(uk):
+
+    return alphaFunc(uk)
+    
+def vectorize(coords, lastCoords):
+
+    vx = coords[0] - lastCoords[0]
+    vy = coords[1] - lastCoords[1]
+
+    return (vx, vy)
+
+
+# returns the next coordinate for a Double Exponential Smoothing filter 
+# ("Efficient jitter compensation using double exponential smoothing", Chung and Kim (2012))
+
+def desFilter(coordList, desCoords, bTrend):
+
+        aFunc = 0
+        gFunc = 0
+        uk = 0
+
+        # step 1: initialize s1 = z1 and b1 = z1 - z0. Then, iterate.
+        if (len(desCoords) == 0 and len(coordList) > 2):
+            desCoords.insert(0, vectorize(coordList[0][0], coordList[1][0]))
+            #print(coordList[0][0])
+            
+            bTrend.insert(0, tuple(np.subtract(vectorize(coordList[0][0], coordList[1][0]), vectorize(coordList[1][0], coordList[2][0]))))
+
+            #print(bFunc)
+
+
+        elif (len(desCoords) > 0):
+
+            # step 2: obtain the new coord zk
+            coord = vectorize(coordList[0][0], coordList[1][0])
+
+            # determine the value uk = ||zk - s(k-1)||
+            uk = math.hypot(coord[0] - desCoords[0][0], coord[1] - desCoords[0][1])
+
+            #print("UK is ", uk)
+
+            # Compute both alpha and gamma
+            # the DES paper found that both should be linearly increasing functions
+            aFunc = alphaFunc(uk)
+            gFunc = gammaFunc(uk)
+
+            #print(aFunc[0])
+            #print("afunc is ", aFunc)
+            #print(type(aFunc))
+
+            #print(type(desCoords[0][0]))
+            #print(bTrend)
+
+            # Step 3: Compute Sk using alpha. The resulting vector denotes the smoothed value
+            sCoordX = (aFunc * coord[0]) + ((1 - aFunc) * (desCoords[0][0] + bTrend[0][0]))
+            sCoordY = (aFunc * coord[1]) + ((1 - aFunc) * (desCoords[0][1] + bTrend[0][1]))
+
+            # print("sCoords: ", (sCoordX, sCoordY))
+
+            desCoords.insert(0, (sCoordX, sCoordY))
+
+            bTrendX = gFunc * (desCoords[0][0] - desCoords[1][0]) + (1 - gFunc)* bTrend[0][0]
+            bTrendY = gFunc * (desCoords[0][1] - desCoords[1][1]) + (1 - gFunc)* bTrend[0][1]
+
+            bTrend.insert(0, (bTrendX, bTrendY))
+            # print("btrend: ", (bTrendX, bTrendY))
+
+        return desCoords, bTrend
+
+
+
+
+        #smooth = coord + desCoords[1]
+
+
+
+
+
+

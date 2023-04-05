@@ -65,12 +65,24 @@ clock = pygame.time.Clock()
 pygame.display.set_caption('Pygame Mouse Tracking Prototype')
 
 
-direction = ""
-lastdir = ""
+
 
 coordList = []
-breakpoints = []
-meanBreakpoints = []
+
+if (FILTER_TYPE == 1):
+    direction = ""
+    lastdir = ""
+    breakpoints = []
+    meanBreakpoints = []
+
+if (FILTER_TYPE == 2):
+    meanCoords = []
+
+if (FILTER_TYPE == 3):
+    desVels = []
+    desCoords = []
+    bTrend = []
+    beginningPos = (None, None)
 
 counter = 0
 
@@ -107,56 +119,6 @@ while not done: # main game loop
                 #pygame.draw.line(screen, "blue", coordList[i][0], coordList[i+1][0], 1)
 
     
-    lastdir = direction
-
-    oldElement = getOldElement(coordList, TIME_COMPARE_SECONDS)
-
-    direction = getDirection(coordList[0][0], oldElement)
-
-    # breakpoint1 code
-    
-    if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
-        # print("BREAKPOINT DETECTED!!!")
-        breakpoints.insert(0, coords)
-
-        # mean filtering
-        if(len(breakpoints) > 1):
-            bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
-            by = int((breakpoints[0][1] + breakpoints[1][1])/2)
-            
-            meanBreakpoints.insert(0, (bx, by))
-    
-    """
-
-    # breakpoint2 code
-    checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
-    if (checkBreakpoint is not False):
-        # pinpoint accurate, but places the point in the past. Not acceptable
-        # breakpoints.insert(0, checkBreakpoint)
-
-        # Real-time, but slight delay in point location
-        breakpoints.insert(0, coords)
-              
-        # mean filtering
-        if(len(breakpoints) > 1):
-            bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
-            by = int((breakpoints[0][1] + breakpoints[1][1])/2)
-            
-            meanBreakpoints.insert(0, (bx, by))
-    """  
-
-    
-    if (len(breakpoints) > 2):
-        for i in range(len(breakpoints)):
-            pygame.draw.circle(screen, "red", breakpoints[i], 3, 2)
-
-    
-    if (len(meanBreakpoints) > 2):
-        for i in range(len(meanBreakpoints)):
-            pygame.draw.circle(screen, "purple", meanBreakpoints[i], 5, 2)
-
-    
-
     mouseAction = "mousemove"
 
     if (counter == 0):
@@ -173,71 +135,132 @@ while not done: # main game loop
         }
         
     }
-    """
-    # second attempt at b splines
-    # it kinda works!!!
-    if (event.type == pygame.MOUSEBUTTONUP or len(breakpoints) > 3):
-        ctr = np.array(breakpoints)
-
-        x = ctr[:,0]
-        y = ctr[:,1]
-
-        l=len(x)
-        t=np.linspace(0,1,l-2,endpoint=True)
-        t=np.append([0,0,0],t)
-        t=np.append(t,[1,1,1])
-
-        tck=[t,[x,y],3]
-        u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
-        out = scipy.interpolate.splev(u3,tck)
-
-        #print(" HERE HERE: ", out[0][0])
-
-        for i in range(len(out[0]) - 1):
-            pygame.draw.line(screen, "yellow", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  1)
-    """
-
-    # second attempt at b splines
-    # it kinda works!!!
-    if (event.type == pygame.MOUSEBUTTONUP or len(meanBreakpoints) > 3):
-        ctr = np.array(meanBreakpoints)
-
-        x = ctr[:,0] # get all values from column 0 (the x values)
-        y = ctr[:,1] # get all values from column 1 (the y values)
-
-
-        #x = x[::-1]
-        #y = y[::-1]
-
-        l=len(x)
-        # print(l)
-   
-        
-        t=np.linspace(0,1,l-2,endpoint=True)
-        t=np.append([0,0,0],t)
-        t=np.append(t,[1,1,1])
-
-        tck=[t,[x,y],3]
-        u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
-        out = scipy.interpolate.splev(u3,tck)
-        
-        for i in range(len(out[0]) - 1):
-            pygame.draw.line(screen, "white", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
-        
-        """
-        #print(" HERE HERE: ", out[0][0])
-
-        print(np.array([x,y]), "\nIs of type: ", type(np.array([x,y])))
-
-        newOut = bspline(np.array([x,y]), max(l*2,70), periodic=False)
-        print(newOut)
-
-        for i in range(len(newOut[0]) - 1):
-            pygame.draw.line(screen, "white", (newOut[0][i],newOut[1][i]), (newOut[0][i+1],newOut[1][i+1]),  3)
-        """
-
 
     output["trials"][0]["mouseEvents"].update(addCoord)
+
+
+    if(FILTER_TYPE == 1):
+        lastdir = direction
+        oldElement = getOldElement(coordList, TIME_COMPARE_SECONDS)
+        direction = getDirection(coordList[0][0], oldElement)
+
+        # breakpoint1 code
+        
+        if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
+            # print("BREAKPOINT DETECTED!!!")
+            breakpoints.insert(0, coords)
+
+            # mean filtering
+            if(len(breakpoints) > 1):
+                bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
+                by = int((breakpoints[0][1] + breakpoints[1][1])/2)
+                
+                meanBreakpoints.insert(0, (bx, by))
+        
+        """
+
+        # breakpoint2 code
+        checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
+        if (checkBreakpoint is not False):
+            # pinpoint accurate, but places the point in the past. Not acceptable
+            # breakpoints.insert(0, checkBreakpoint)
+
+            # Real-time, but slight delay in point location
+            breakpoints.insert(0, coords)
+                
+            # mean filtering
+            if(len(breakpoints) > 1):
+                bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
+                by = int((breakpoints[0][1] + breakpoints[1][1])/2)
+                
+                meanBreakpoints.insert(0, (bx, by))
+        """  
+
+        
+        if (len(breakpoints) > 2):
+            for i in range(len(breakpoints)):
+                pygame.draw.circle(screen, "red", breakpoints[i], 3, 2)
+
+        
+        if (len(meanBreakpoints) > 2):
+            for i in range(len(meanBreakpoints)):
+                pygame.draw.circle(screen, "purple", meanBreakpoints[i], 5, 2)
+
+
+        # second attempt at b splines
+        # it kinda works!!!
+        if (event.type == pygame.MOUSEBUTTONUP or len(meanBreakpoints) > 3):
+            ctr = np.array(meanBreakpoints)
+
+            x = ctr[:,0] # get all values from column 0 (the x values)
+            y = ctr[:,1] # get all values from column 1 (the y values)
+
+            l=len(x)
+            # print(l)
+    
+            
+            t=np.linspace(0,1,l-2,endpoint=True)
+            t=np.append([0,0,0],t)
+            t=np.append(t,[1,1,1])
+
+            tck=[t,[x,y],3]
+            u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
+            out = scipy.interpolate.splev(u3,tck)
+            
+            for i in range(len(out[0]) - 1):
+                pygame.draw.line(screen, "white", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
+    
+
+    # Mean Filter Code
+    elif(FILTER_TYPE == 2):
+
+        if (len(coordList) > 2):
+            mean = meanFilter(coordList, TIME_COMPARE_SECONDS)
+            if (mean is not False):
+                meanCoords.insert(0, mean)
+
+        if (len (meanCoords) > 2):
+            for i in range(len(meanCoords) - 1):
+                pygame.draw.line(screen, "orange", meanCoords[i], meanCoords[i+1], 1)
+
+
+    elif (FILTER_TYPE == 3):
+        
+        if (beginningPos == (None, None)):
+            beginningPos = coords
+
+
+        desVels, bTrend = desFilter(coordList, desVels, bTrend)
+
+        if (len(desVels) > 0):
+            #print(desVels[0])
+
+            if (len(desCoords) > 0 ):
+                desX = desVels[0][0] + desCoords[0][0]
+                desY = desVels[0][1] + desCoords[0][1]
+            else:
+                desX = desVels[0][0] + beginningPos[0]
+                desY = desVels[0][1] + beginningPos[1]
+
+            desCoords.insert(0, (desX, desY))
+
+            print("descoords: ", desCoords[0])
+            print("desvels: ", desVels[0])
+            print("btrend: ", bTrend[0])
+
+
+        #realLocY = sum(list(zip(*desCoords[1]))) + beginningPos[1]
+        #print(realLocX, realLocY)
+
+        if (len(desCoords)> 2):
+            for i in range(len(desCoords) - 1):
+                pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 1)
+
+        
+
+
+
+    
 
     # print("\n")
 

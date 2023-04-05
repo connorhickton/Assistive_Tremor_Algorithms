@@ -52,15 +52,27 @@ screen = pygame.display.set_mode((screenAvailWidth, screenAvailHeight))   # sett
 pygame.display.set_caption('Pygame Mouse Replaying Prototype')
 
 
-direction = ""
-lastdir = ""
+
 
 
 coordList = []
 currentTrialList = []
-breakpoints = []
-meanBreakpoints = []
 
+if (FILTER_TYPE == 1):
+    direction = ""
+    lastdir = ""
+    
+    breakpoints = []
+    meanBreakpoints = []
+
+if (FILTER_TYPE == 2):
+    meanCoords = []
+
+if (FILTER_TYPE == 3):
+    desVels = []
+    desCoords = []
+    bTrend = []
+    beginningPos = (None, None)
 #sumOfVariability = 0
 
 # tracks the time that the previous mouse event happened at (in ms). Starts at the time the trial began, in ms since epoch
@@ -180,68 +192,131 @@ for h in range(len(data["trials"])):
             for i in range(len(currentTrialList)-1):
                 pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 1)
 
-        lastdir = direction
+
+        if (FILTER_TYPE == 1):
+            lastdir = direction
+            oldElement = getOldElement(coordList, TIME_COMPARE_SECONDS)
+            direction = getDirection(coordList[0][0], oldElement)
+
+
+            # breakpoint 1 code
+            
+            if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
+                # print("BREAKPOINT DETECTED!!!")
+                breakpoints.insert(0, coords)
+
+                # mean filtering
+                if(len(breakpoints) > 1):
+                    bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
+                    by = int((breakpoints[0][1] + breakpoints[1][1])/2)
+                    
+                    meanBreakpoints.insert(0, (bx, by))
+            """
+
+            # breakpoint2 code
+            checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
+            if (checkBreakpoint is not False):
+                breakpoints.insert(0, checkBreakpoint)
+            """
+            # """"
+            
+            if (len(breakpoints) > 2):
+                for i in range(len(breakpoints)):
+                    pygame.draw.circle(screen, "red", breakpoints[i], 3, 2)
+
+
+            if (len(meanBreakpoints) > 2):
+                for i in range(len(meanBreakpoints)):
+                    pygame.draw.circle(screen, "purple", meanBreakpoints[i], 5, 2)
+            
+            # second attempt at b splines
+            # it kinda works!!!
+            if (event.type == pygame.MOUSEBUTTONUP or len(meanBreakpoints) > 3):
+                ctr = np.array(meanBreakpoints)
+
+                x = ctr[:,0]
+                y = ctr[:,1]
+
+                l=len(x)
+                t=np.linspace(0,1,l-2,endpoint=True)
+                t=np.append([0,0,0],t)
+                t=np.append(t,[1,1,1])
+
+                tck=[t,[x,y],3]
+                u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
+                out = scipy.interpolate.splev(u3,tck)
+
+
+                for i in range(len(out[0]) - 1):
+                    pygame.draw.line(screen, "white", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
+
+        elif(FILTER_TYPE == 2):
+            
+            if (len(coordList) > 2):
+                mean = meanFilter(coordList, TIME_COMPARE_SECONDS)
+                if (mean is not False):
+                    meanCoords.insert(0, mean)
+
+            if (len (meanCoords) > 2):
+                for i in range(len(meanCoords) - 1):
+                    pygame.draw.line(screen, "orange", meanCoords[i], meanCoords[i+1], 1)
+
+        elif (FILTER_TYPE == 3):
         
-        oldElement = getOldElement(coordList, TIME_COMPARE_SECONDS)
+            if (beginningPos == (None, None) and len(currentTrialList) > 0):
+                beginningPos = coords
 
-        direction = getDirection(coordList[0][0], oldElement)
+            # coordList has another dimension, so to plug this into desFilter I need to add that dimension, or else I have to rewrite the whole thing
+            currentTrialPad = [currentTrialList]
 
+            desVels, bTrend = desFilter(currentTrialList, desVels, bTrend)
 
-        # breakpoint 1 code
-        
-        if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
-            # print("BREAKPOINT DETECTED!!!")
-            breakpoints.insert(0, coords)
+            if (len(desVels) > 0):
+                #print(desVels[0])
 
-            # mean filtering
-            if(len(breakpoints) > 1):
-                bx = int((breakpoints[0][0] + breakpoints[1][0])/2)
-                by = int((breakpoints[0][1] + breakpoints[1][1])/2)
-                
-                meanBreakpoints.insert(0, (bx, by))
-        """
+                if (len(desCoords) > 0 ):
+                    desX = desVels[0][0] + desCoords[0][0]
+                    desY = desVels[0][1] + desCoords[0][1]
+                else:
+                    desX = desVels[0][0] + beginningPos[0]
+                    desY = desVels[0][1] + beginningPos[1]
 
-        # breakpoint2 code
-        checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
-        if (checkBreakpoint is not False):
-            breakpoints.insert(0, checkBreakpoint)
-        """
-        # """"
-        
-        if (len(breakpoints) > 2):
-            for i in range(len(breakpoints)):
-                pygame.draw.circle(screen, "red", breakpoints[i], 3, 2)
+                desCoords.insert(0, (desX, desY))
+
+                print("desCoords: ", desCoords[0])
+                print("desVels:   ", desVels[0])
 
 
-        if (len(meanBreakpoints) > 2):
-            for i in range(len(meanBreakpoints)):
-                pygame.draw.circle(screen, "purple", meanBreakpoints[i], 5, 2)
-        
-        # second attempt at b splines
-        # it kinda works!!!
-        if (event.type == pygame.MOUSEBUTTONUP or len(meanBreakpoints) > 3):
-            ctr = np.array(meanBreakpoints)
+            #realLocY = sum(list(zip(*desCoords[1]))) + beginningPos[1]
+            #print(realLocX, realLocY)
 
-            x = ctr[:,0]
-            y = ctr[:,1]
+            if (len(desCoords)> 2):
+                for i in range(len(desCoords) - 1):
+                    pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 1)
 
-            l=len(x)
-            t=np.linspace(0,1,l-2,endpoint=True)
-            t=np.append([0,0,0],t)
-            t=np.append(t,[1,1,1])
-
-            tck=[t,[x,y],3]
-            u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
-            out = scipy.interpolate.splev(u3,tck)
-
-            #print(" HERE HERE: ", out[0][0])
-
-            for i in range(len(out[0]) - 1):
-                pygame.draw.line(screen, "white", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
 
         count += 1
 
         pygame.display.update()
+
+    # reset filters when trial is over, since trials shouldn't carry over through multiple
+    if (FILTER_TYPE == 1):
+        direction = ""
+        lastdir = ""
+        
+        breakpoints = []
+        meanBreakpoints = []
+
+    if (FILTER_TYPE == 2):
+        meanCoords = []
+
+    if (FILTER_TYPE == 3):
+        desVels = []
+        desCoords = []
+        bTrend = []
+        beginningPos = (None, None)
+    
+
 
 pygame.quit()
 
