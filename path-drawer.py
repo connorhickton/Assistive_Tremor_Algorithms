@@ -218,10 +218,12 @@ while not done: # main game loop
             mean = meanFilter(coordList, TIME_COMPARE_SECONDS)
             if (mean is not False):
                 meanCoords.insert(0, mean)
+            else:
+                meanCoords.insert(0, coordList[-1][0])
 
         if (len (meanCoords) > 2):
             for i in range(len(meanCoords) - 1):
-                pygame.draw.line(screen, "orange", meanCoords[i], meanCoords[i+1], 1)
+                pygame.draw.line(screen, "cyan", meanCoords[i], meanCoords[i+1], 1)
 
 
     elif (FILTER_TYPE == 3):
@@ -231,6 +233,7 @@ while not done: # main game loop
 
 
         desVels, bTrend = desFilter(coordList, desVels, bTrend)
+
 
         if (len(desVels) > 0):
             #print(desVels[0])
@@ -252,7 +255,7 @@ while not done: # main game loop
         #realLocY = sum(list(zip(*desCoords[1]))) + beginningPos[1]
         #print(realLocX, realLocY)
 
-        if (len(desCoords)> 2):
+        if (len(desCoords)> 20):
             for i in range(len(desCoords) - 1):
                 pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 1)
 

@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 
-TIME_COMPARE_SECONDS = 0.5
+TIME_COMPARE_SECONDS = 0.2
 
 BREAKVAL = 3
 
@@ -14,7 +14,7 @@ MAX_ANGLE = 90.0
 # 1 means B-spline and breakpoint filtering, a la Banihashem et al
 # 2 means mean filtering/moving average
 # 3 means Double Exponential Smoothing filter
-FILTER_TYPE = 3
+FILTER_TYPE = 2
 
 # If FILTER_TYPE is 1 (B-spline and breakpoint), then you can choose between two breakpoint algorithms
 # 1 means Banihashem's breakpoint algorithm
@@ -108,7 +108,12 @@ def eval1(tgt1, tgt2, radius, path):
         # get closest distance from task axis
         # https://stackoverflow.com/questions/47177493/python-point-on-a-line-closest-to-third-point
 
-        x3, y3 = path[i][0]
+        if (type(path[i][0]) is tuple):
+            #print("tuple")
+            x3, y3 = path[i][0]
+        else:
+            #print("no tuple")
+            x3, y3 = path[i]
         
         det = dx * dx + dy * dy
         a = (dy*(y3-y1)+dx*(x3-x1))/det
@@ -132,10 +137,11 @@ def eval1(tgt1, tgt2, radius, path):
     return equation
 
 # Test of eval1
+"""
 import math
 tstPath = [[[1,10],100],[[3,8],102], [[6,6],104], [[8,2],106]]
 print(eval1([0,10], [10,0], 5, tstPath))
-
+"""
 
 
 # Banihashem et al's specific breakpoint logic.
@@ -235,14 +241,14 @@ def meanFilter(coordList, timeCmp):
 # ("Efficient jitter compensation using double exponential smoothing", Chung and Kim (2012))
 def alphaFunc(uk):
 
-    min = 0
+    min = 1
     max = 100
 
-    if (uk <= min):
+    if (uk < min):
         return 0
-    elif (uk >= max):
+    elif (uk > max):
         return 1
-    elif (uk < max and uk > min):
+    elif (uk <= max and uk >= min):
         return float(uk / max)
 
 # alphaFunc and gammaFunc ended up being the same in the paper

@@ -64,6 +64,7 @@ if (FILTER_TYPE == 1):
     
     breakpoints = []
     meanBreakpoints = []
+    splineCoords = []
 
 if (FILTER_TYPE == 2):
     meanCoords = []
@@ -231,7 +232,7 @@ for h in range(len(data["trials"])):
             
             # second attempt at b splines
             # it kinda works!!!
-            if (event.type == pygame.MOUSEBUTTONUP or len(meanBreakpoints) > 3):
+            if (len(meanBreakpoints) > 3):
                 ctr = np.array(meanBreakpoints)
 
                 x = ctr[:,0]
@@ -246,20 +247,31 @@ for h in range(len(data["trials"])):
                 u3=np.linspace(0,1,(max(l*2,70)),endpoint=True)
                 out = scipy.interpolate.splev(u3,tck)
 
+                #print(out[0]) #[i],out[1][i])
+
 
                 for i in range(len(out[0]) - 1):
                     pygame.draw.line(screen, "white", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
+                    if (len(currentTrialList) > 0):
+                        splineCoords.insert(0, (int(out[0][i]), int(out[1][i])))
+                        #print(splineCoords[0])
 
         elif(FILTER_TYPE == 2):
             
-            if (len(coordList) > 2):
-                mean = meanFilter(coordList, TIME_COMPARE_SECONDS)
+            # coordList has another dimension, so to plug this into desFilter I need to add that dimension, or else I have to rewrite the whole thing
+            currentTrialPad = [currentTrialList]
+
+            if (len(currentTrialList) > 2):
+                mean = meanFilter(currentTrialList, TIME_COMPARE_SECONDS)
                 if (mean is not False):
                     meanCoords.insert(0, mean)
+                else:
+                    #print(currentTrialList[-1])
+                    meanCoords.insert(0, currentTrialList[-1][0])
 
             if (len (meanCoords) > 2):
                 for i in range(len(meanCoords) - 1):
-                    pygame.draw.line(screen, "orange", meanCoords[i], meanCoords[i+1], 1)
+                    pygame.draw.line(screen, "cyan", meanCoords[i], meanCoords[i+1], 1)
 
         elif (FILTER_TYPE == 3):
         
@@ -283,8 +295,8 @@ for h in range(len(data["trials"])):
 
                 desCoords.insert(0, (desX, desY))
 
-                print("desCoords: ", desCoords[0])
-                print("desVels:   ", desVels[0])
+                #print("desCoords: ", desCoords[0])
+                #print("desVels:   ", desVels[0])
 
 
             #realLocY = sum(list(zip(*desCoords[1]))) + beginningPos[1]
@@ -301,16 +313,41 @@ for h in range(len(data["trials"])):
 
     # reset filters when trial is over, since trials shouldn't carry over through multiple
     if (FILTER_TYPE == 1):
+        if(len(splineCoords) > 1 and h > 0):
+            filterVariability = eval1(last_start, last_target_ctr, last_target_size[0], splineCoords)
+            print("RUN #", h)
+            print ("FILTER TYPE 1 Movement Variability Evaluation: ", filterVariability)
+            print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", splineCoords[-1])
+            print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", splineCoords[0])
+        
+
         direction = ""
         lastdir = ""
         
         breakpoints = []
         meanBreakpoints = []
+        splineCoords = []
 
     if (FILTER_TYPE == 2):
+
+        if(len(meanCoords) > 1 and h > 0):
+            filterVariability = eval1(last_start, last_target_ctr, last_target_size[0], meanCoords)
+            print("RUN #", h)
+            print ("FILTER TYPE 2 Movement Variability Evaluation: ", filterVariability)
+            print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", meanCoords[-1])
+            print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", meanCoords[0])
+
         meanCoords = []
 
     if (FILTER_TYPE == 3):
+        if(len(desCoords) > 1 and h > 0):
+            filterVariability = eval1(last_start, last_target_ctr, last_target_size[0], desCoords)
+            print("RUN #", h)
+            print ("FILTER TYPE 3 Movement Variability Evaluation: ", filterVariability)
+            print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", desCoords[-1])
+            print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", desCoords[0])
+            
+
         desVels = []
         desCoords = []
         bTrend = []
