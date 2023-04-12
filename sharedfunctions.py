@@ -15,6 +15,7 @@ MAX_ANGLE = 90.0
 # 2 means mean filtering/moving average
 # 3 means Double Exponential Smoothing filter
 FILTER_TYPE = 3
+FILTER_TYPE = 3
 
 # If FILTER_TYPE is 1 (B-spline and breakpoint), then you can choose between two breakpoint algorithms
 # 1 means Banihashem's breakpoint algorithm
@@ -276,9 +277,9 @@ def devectorize(desVel, absCoords):
 
 def desFilter(coordList, desVels, bTrend):
 
-        #aFunc = 0
-        #gFunc = 0
-        #uk = 0
+        ##aFunc = 0
+        ##gFunc = 0
+        ##uk = 0
         coord = (None, None)
 
         # step 1: initialize s1 = z1 and b1 = z1 - z0. Then, iterate.
@@ -287,7 +288,7 @@ def desFilter(coordList, desVels, bTrend):
             #print(coordList[0][0])
             
             bTrend.insert(0, tuple(np.subtract(vectorize(coordList[0][0], coordList[1][0]), vectorize(coordList[1][0], coordList[2][0]))))
-
+            print("this should be run exactly once")
             #print(bFunc)
 
 

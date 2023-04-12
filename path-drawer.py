@@ -105,6 +105,7 @@ while not done: # main game loop
     
     coords = pygame.mouse.get_pos()
     skipped = False
+    skipped = False
 
     # Don't add repeated coordinates
     if len(coordList) == 0 or coordList[0][0] != coords:
