@@ -119,7 +119,7 @@ for h in range(len(data["trials"])):
             print("RUN #", h)
             print ("Movement Variability Evaluation: ", variability)
             print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", currentTrialList[-1])
-            print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", currentTrialList[0])
+            #print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", currentTrialList[0])
             currentTrialList = []
 
 
@@ -179,11 +179,12 @@ for h in range(len(data["trials"])):
         coordTime = (j["t"])
         
         # Oops, I should be getting the time from the JSON for breakpoint detection! Or else a computer slowdown will affect results
-        # coordList.insert(0, (coords, int(time.time() * 1000)))
+        # old incorrect code: coordList.insert(0, (coords, int(time.time() * 1000)))
         coordList.insert(0, (coords, coordTime))
 
         # if the task is "pointing" and the target has been activated:
-        if data["taskName"] == "Pointing" and data['trials'][h]['taskEvents'][0]['t'] < coordTime:
+        #if data["taskName"] == "Pointing" and data['trials'][h]['taskEvents'][0]['t'] < coordTime:
+        if data["taskName"] == "Pointing" and data['trials'][h]['taskEvents'][0]['t'] < coordTime and data['trials'][h]['endTime'] > coordTime:
             currentTrialList.insert(0, coordList[0])
 
         
@@ -192,6 +193,10 @@ for h in range(len(data["trials"])):
         if (len(currentTrialList) > 2):
             for i in range(len(currentTrialList)-1):
                 pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 1)
+
+        else:
+            for i in range(len(coordList)-1):
+                pygame.draw.line(screen, "green", coordList[i][0], coordList[i+1][0], 1)
 
 
         if (FILTER_TYPE == 1):
@@ -259,7 +264,8 @@ for h in range(len(data["trials"])):
         elif(FILTER_TYPE == 2):
             
             # coordList has another dimension, so to plug this into desFilter I need to add that dimension, or else I have to rewrite the whole thing
-            currentTrialPad = [currentTrialList]
+            # nvm fixed this
+            #currentTrialPad = [currentTrialList]
 
             if (len(currentTrialList) > 2):
                 mean = meanFilter(currentTrialList, TIME_COMPARE_SECONDS)
@@ -279,7 +285,8 @@ for h in range(len(data["trials"])):
                 beginningPos = coords
 
             # coordList has another dimension, so to plug this into desFilter I need to add that dimension, or else I have to rewrite the whole thing
-            currentTrialPad = [currentTrialList]
+            # nvm fixed this
+            #currentTrialPad = [currentTrialList]
 
             desVels, bTrend = desFilter(currentTrialList, desVels, bTrend)
 
@@ -318,7 +325,18 @@ for h in range(len(data["trials"])):
             print("RUN #", h)
             print ("FILTER TYPE 1 Movement Variability Evaluation: ", filterVariability)
             print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", splineCoords[-1])
-            print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", splineCoords[0])
+            #print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", splineCoords[0])
+            screen.fill("black")
+            for i in range(len(splineCoords) - 1):
+                #print(desCoords[i])
+                pygame.draw.line(screen, "cyan", splineCoords[i], splineCoords[i+1], 2)
+            
+            for i in range(len(currentTrialList) - 1):
+                pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 2)
+
+            pygame.draw.line(screen, "gray", start, target_ctr, 3)
+            pygame.display.update()
+            time.sleep(2)
         
 
         direction = ""
@@ -335,17 +353,44 @@ for h in range(len(data["trials"])):
             print("RUN #", h)
             print ("FILTER TYPE 2 Movement Variability Evaluation: ", filterVariability)
             print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", meanCoords[-1])
-            print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", meanCoords[0])
+            #print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", meanCoords[0])
+
+            screen.fill("black")
+            for i in range(len(meanCoords) - 1):
+                #print(desCoords[i])
+                pygame.draw.line(screen, "cyan", meanCoords[i], meanCoords[i+1], 2)
+            
+            for i in range(len(currentTrialList) - 1):
+                pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 2)
+
+            pygame.draw.line(screen, "gray", start, target_ctr, 3)
+            pygame.display.update()
+            time.sleep(2)
 
         meanCoords = []
 
     if (FILTER_TYPE == 3):
-        if(len(desCoords) > 1 and h > 0):
-            filterVariability = eval1(last_start, last_target_ctr, last_target_size[0], desCoords)
-            print("RUN #", h)
+        if(len(desCoords) > 1):
+            filterVariability = eval1(start, target_ctr, target_size[0], desCoords)
+            print("RUN #", h+1)
             print ("FILTER TYPE 3 Movement Variability Evaluation: ", filterVariability)
-            print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", desCoords[-1])
-            print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", desCoords[0])
+            print("First Target coord vs first element added to currentTrialList: ", start, " | ", desCoords[-1])
+            #print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", desCoords[0])
+
+            screen.fill("black")
+            for i in range(len(desCoords) - 1):
+                #print(desCoords[i])
+                pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 2)
+            
+            for i in range(len(currentTrialList) - 1):
+                pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 2)
+
+            pygame.draw.line(screen, "gray", start, target_ctr, 3)
+            pygame.display.update()
+            time.sleep(2)
+
+
+
             
 
         desVels = []

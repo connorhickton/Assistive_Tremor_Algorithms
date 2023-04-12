@@ -104,10 +104,13 @@ while not done: # main game loop
 
     
     coords = pygame.mouse.get_pos()
+    skipped = False
 
     # Don't add repeated coordinates
     if len(coordList) == 0 or coordList[0][0] != coords:
         coordList.insert(0, (coords, int(time.time() * 1000)))
+    else:
+        skipped = True
 
 
     if (len(coordList) > 2):
@@ -226,38 +229,39 @@ while not done: # main game loop
                 pygame.draw.line(screen, "cyan", meanCoords[i], meanCoords[i+1], 1)
 
 
-    elif (FILTER_TYPE == 3):
+    elif (FILTER_TYPE == 3 ):
         
         if (beginningPos == (None, None)):
             beginningPos = coords
 
+        if (skipped == False):
+            desVels, bTrend = desFilter(coordList, desVels, bTrend)
 
-        desVels, bTrend = desFilter(coordList, desVels, bTrend)
 
+            if (len(desVels) > 0):
+                #print(desVels[0])
 
-        if (len(desVels) > 0):
-            #print(desVels[0])
+                if (len(desCoords) > 0 ):
+                    desX = desVels[0][0] + desCoords[0][0]
+                    desY = desVels[0][1] + desCoords[0][1]
+                else:
+                    desX = desVels[0][0] + beginningPos[0]
+                    desY = desVels[0][1] + beginningPos[1]
 
-            if (len(desCoords) > 0 ):
-                desX = desVels[0][0] + desCoords[0][0]
-                desY = desVels[0][1] + desCoords[0][1]
-            else:
-                desX = desVels[0][0] + beginningPos[0]
-                desY = desVels[0][1] + beginningPos[1]
+                desCoords.insert(0, (desX, desY))
 
-            desCoords.insert(0, (desX, desY))
-
-            print("descoords: ", desCoords[0])
-            print("desvels: ", desVels[0])
-            print("btrend: ", bTrend[0])
+                #print("descoords: ", desCoords[0])
+                #print("desvels: ", desVels[0])
+                #print("btrend: ", bTrend[0])
 
 
         #realLocY = sum(list(zip(*desCoords[1]))) + beginningPos[1]
         #print(realLocX, realLocY)
 
-        if (len(desCoords)> 20):
+        if (len(desCoords)> 2):
             for i in range(len(desCoords) - 1):
                 pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 1)
+                
 
         
 

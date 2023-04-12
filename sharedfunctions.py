@@ -14,7 +14,7 @@ MAX_ANGLE = 90.0
 # 1 means B-spline and breakpoint filtering, a la Banihashem et al
 # 2 means mean filtering/moving average
 # 3 means Double Exponential Smoothing filter
-FILTER_TYPE = 2
+FILTER_TYPE = 3
 
 # If FILTER_TYPE is 1 (B-spline and breakpoint), then you can choose between two breakpoint algorithms
 # 1 means Banihashem's breakpoint algorithm
@@ -263,19 +263,27 @@ def vectorize(coords, lastCoords):
 
     return (vx, vy)
 
+def devectorize(desVel, absCoords):
+
+    ax = desVel[0] + absCoords[0]
+    ay = desVel[1] + absCoords[1]
+
+    return (ax, ay)
+
 
 # returns the next coordinate for a Double Exponential Smoothing filter 
 # ("Efficient jitter compensation using double exponential smoothing", Chung and Kim (2012))
 
-def desFilter(coordList, desCoords, bTrend):
+def desFilter(coordList, desVels, bTrend):
 
-        aFunc = 0
-        gFunc = 0
-        uk = 0
+        #aFunc = 0
+        #gFunc = 0
+        #uk = 0
+        coord = (None, None)
 
         # step 1: initialize s1 = z1 and b1 = z1 - z0. Then, iterate.
-        if (len(desCoords) == 0 and len(coordList) > 2):
-            desCoords.insert(0, vectorize(coordList[0][0], coordList[1][0]))
+        if (len(desVels) == 0 and len(coordList) > 2):
+            desVels.insert(0, vectorize(coordList[0][0], coordList[1][0]))
             #print(coordList[0][0])
             
             bTrend.insert(0, tuple(np.subtract(vectorize(coordList[0][0], coordList[1][0]), vectorize(coordList[1][0], coordList[2][0]))))
@@ -283,13 +291,13 @@ def desFilter(coordList, desCoords, bTrend):
             #print(bFunc)
 
 
-        elif (len(desCoords) > 0):
+        elif (len(desVels) > 0):
 
             # step 2: obtain the new coord zk
             coord = vectorize(coordList[0][0], coordList[1][0])
 
             # determine the value uk = ||zk - s(k-1)||
-            uk = math.hypot(coord[0] - desCoords[0][0], coord[1] - desCoords[0][1])
+            uk = math.hypot(coord[0] - desVels[0][0], coord[1] - desVels[0][1])
 
             #print("UK is ", uk)
 
@@ -302,24 +310,26 @@ def desFilter(coordList, desCoords, bTrend):
             #print("afunc is ", aFunc)
             #print(type(aFunc))
 
-            #print(type(desCoords[0][0]))
+            #print(type(desVels[0][0]))
             #print(bTrend)
 
             # Step 3: Compute Sk using alpha. The resulting vector denotes the smoothed value
-            sCoordX = (aFunc * coord[0]) + ((1 - aFunc) * (desCoords[0][0] + bTrend[0][0]))
-            sCoordY = (aFunc * coord[1]) + ((1 - aFunc) * (desCoords[0][1] + bTrend[0][1]))
+            sCoordX = (aFunc * coord[0]) + ((1 - aFunc) * (desVels[0][0] + bTrend[0][0]))
+            sCoordY = (aFunc * coord[1]) + ((1 - aFunc) * (desVels[0][1] + bTrend[0][1]))
 
             # print("sCoords: ", (sCoordX, sCoordY))
 
-            desCoords.insert(0, (sCoordX, sCoordY))
+            desVels.insert(0, (sCoordX, sCoordY))
 
-            bTrendX = gFunc * (desCoords[0][0] - desCoords[1][0]) + (1 - gFunc)* bTrend[0][0]
-            bTrendY = gFunc * (desCoords[0][1] - desCoords[1][1]) + (1 - gFunc)* bTrend[0][1]
+            bTrendX = gFunc * (desVels[0][0] - desVels[1][0]) + (1 - gFunc)* bTrend[0][0]
+            bTrendY = gFunc * (desVels[0][1] - desVels[1][1]) + (1 - gFunc)* bTrend[0][1]
 
             bTrend.insert(0, (bTrendX, bTrendY))
             # print("btrend: ", (bTrendX, bTrendY))
 
-        return desCoords, bTrend
+        #desCoord = devectorize(desVels[0], coordList[0])
+
+        return desVels, bTrend
 
 
 
