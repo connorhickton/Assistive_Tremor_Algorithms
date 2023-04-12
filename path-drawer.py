@@ -104,10 +104,13 @@ while not done: # main game loop
 
     
     coords = pygame.mouse.get_pos()
+    skipped = False
 
     # Don't add repeated coordinates
     if len(coordList) == 0 or coordList[0][0] != coords:
         coordList.insert(0, (coords, int(time.time() * 1000)))
+    else:
+        skipped = True
 
 
     if (len(coordList) > 2):
@@ -231,8 +234,8 @@ while not done: # main game loop
         if (beginningPos == (None, None)):
             beginningPos = coords
 
-
-        desVels, bTrend = desFilter(coordList, desVels, bTrend)
+        if skipped == False:
+            desVels, bTrend = desFilter(coordList, desVels, bTrend)
 
 
         if (len(desVels) > 0):
@@ -249,13 +252,17 @@ while not done: # main game loop
 
             print("descoords: ", desCoords[0])
             print("desvels: ", desVels[0])
-            print("btrend: ", bTrend[0])
+            #print("btrend: ", bTrend[0])
+            time.sleep(0.05)
+            print("LEN OF coordList: ", len(coordList))
+            print("LEN OF desCoords: ", len(desCoords))
+            print("LEN OF desVels: ", len(desVels))
 
 
         #realLocY = sum(list(zip(*desCoords[1]))) + beginningPos[1]
         #print(realLocX, realLocY)
 
-        if (len(desCoords)> 20):
+        if (len(desCoords)> 2):
             for i in range(len(desCoords) - 1):
                 pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 1)
 

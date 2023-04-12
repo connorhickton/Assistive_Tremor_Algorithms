@@ -297,6 +297,9 @@ for h in range(len(data["trials"])):
 
                 #print("desCoords: ", desCoords[0])
                 #print("desVels:   ", desVels[0])
+                #print("LEN OF currentTrialList: ", len(currentTrialList))
+                #print("LEN OF desCoords: ", len(desCoords))
+                #print("LEN OF desVels: ", len(desVels))
 
 
             #realLocY = sum(list(zip(*desCoords[1]))) + beginningPos[1]
