@@ -122,6 +122,14 @@ for h in range(len(data["trials"])):
             #print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", currentTrialList[0])
             currentTrialList = []
 
+    elif (data["taskName"] == "Plotting"):
+        target_ctr = ((data["trials"][h]["target"]["center"]["X"]), (data["trials"][h]["target"]["center"]["Y"]))
+        start = (data["trials"][h]["target"]["start"]["X"], data["trials"][h]["target"]["start"]["Y"])
+        target_size = (1,1)
+
+        
+    
+
 
     
     # Secondary game loop. Iterates through mouse events stored in the opened JSON file.
@@ -160,6 +168,7 @@ for h in range(len(data["trials"])):
         # bad but working way to space out the events to show the proper timing when the data was recorded   
         # If replaying data from path-drawer.py, then it appears slow. 
         # However, it should be accurate in terms of time-based data, as if it were full speed.
+        # print(j["t"], " minus ", last)
         time.sleep((j["t"] - last)/1000)
         last = j["t"]
         #print (j["t"], "     ", (j["t"] - last))
@@ -187,16 +196,19 @@ for h in range(len(data["trials"])):
         if data["taskName"] == "Pointing" and data['trials'][h]['taskEvents'][0]['t'] < coordTime and data['trials'][h]['endTime'] > coordTime:
             currentTrialList.insert(0, coordList[0])
 
+        elif data["taskName"] == "Plotting":
+            currentTrialList.insert(0, coordList[0])
+
         
         # if currentTrialList is used, only the current trial's raw mouse data will be shown in green.
         # if it's coordList, then the entire path will be shown for all trials.
         if (len(currentTrialList) > 2):
             for i in range(len(currentTrialList)-1):
-                pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 1)
+                pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 3)
 
         else:
             for i in range(len(coordList)-1):
-                pygame.draw.line(screen, "green", coordList[i][0], coordList[i+1][0], 1)
+                pygame.draw.line(screen, "green", coordList[i][0], coordList[i+1][0], 3)
 
 
         if (FILTER_TYPE == 1):
@@ -278,7 +290,7 @@ for h in range(len(data["trials"])):
 
             if (len (meanCoords) > 2):
                 for i in range(len(meanCoords) - 1):
-                    pygame.draw.line(screen, "cyan", meanCoords[i], meanCoords[i+1], 1)
+                    pygame.draw.line(screen, "aqua", meanCoords[i], meanCoords[i+1], 3)
 
         elif (FILTER_TYPE == 3):
         
@@ -315,30 +327,56 @@ for h in range(len(data["trials"])):
 
             if (len(desCoords)> 2):
                 for i in range(len(desCoords) - 1):
-                    pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 1)
+                    pygame.draw.line(screen, "aqua", desCoords[i], desCoords[i+1], 3)
 
 
         count += 1
 
         pygame.display.update()
 
+    if (data["taskName"] == "Plotting" and len(coordList) > 1):
+        
+        print("PLOTTED EVALUATION")
+        #print(i[0] for i in coordList)
+        coordListNoTimes = [i[0] for i in coordList]
+        unFilterVariability = eval1(start, target_ctr, target_size, (coordListNoTimes))
+        print("NON FILTERED Movement Variability Evaluation:   ", unFilterVariability)
+        
+        if (FILTER_TYPE == 1):
+            filterVariability = eval1(start, target_ctr, target_size, splineCoords)
+            print ("FILTER TYPE 1 Movement Variability Evaluation: ", filterVariability)
+            print("Start Coord vs Target Start: ", coordList[-1], start)
+
+        elif (FILTER_TYPE == 2):
+            filterVariability = eval1(start, target_ctr, target_size, meanCoords)
+            print ("FILTER TYPE 2 Movement Variability Evaluation: ", filterVariability)
+            print("Start Coord vs Target Start: ", coordList[-1], start)
+
+        elif (FILTER_TYPE == 3):
+            filterVariability = eval1(start, target_ctr, target_size, desCoords)
+            print ("FILTER TYPE 3 Movement Variability Evaluation: ", filterVariability)
+            print("Start Coord vs Target Start: ", coordList[-1], start)
+
+        h = int(h)
+
+
     # reset filters when trial is over, since trials shouldn't carry over through multiple
     if (FILTER_TYPE == 1):
-        if(len(splineCoords) > 1 and h > 0):
-            filterVariability = eval1(last_start, last_target_ctr, last_target_size[0], splineCoords)
+        if(len(splineCoords) > 1):
+            filterVariability = eval1(start, target_ctr, target_size[0], splineCoords)
             print("RUN #", h)
             print ("FILTER TYPE 1 Movement Variability Evaluation: ", filterVariability)
-            print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", splineCoords[-1])
+            print("First Target coord vs first element added to currentTrialList: ", start, " | ", splineCoords[-1])
             #print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", splineCoords[0])
             screen.fill("black")
             for i in range(len(splineCoords) - 1):
                 #print(desCoords[i])
-                pygame.draw.line(screen, "cyan", splineCoords[i], splineCoords[i+1], 2)
+                pygame.draw.line(screen, "aqua", splineCoords[i], splineCoords[i+1], 2)
             
             for i in range(len(currentTrialList) - 1):
                 pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 2)
 
-            pygame.draw.line(screen, "gray", start, target_ctr, 3)
+            pygame.draw.line(screen, "gray", start, target_ctr, 2)
             pygame.display.update()
             time.sleep(2)
         
@@ -352,22 +390,22 @@ for h in range(len(data["trials"])):
 
     if (FILTER_TYPE == 2):
 
-        if(len(meanCoords) > 1 and h > 0):
-            filterVariability = eval1(last_start, last_target_ctr, last_target_size[0], meanCoords)
+        if(len(meanCoords) > 1):
+            filterVariability = eval1(start, target_ctr, target_size[0], meanCoords)
             print("RUN #", h)
             print ("FILTER TYPE 2 Movement Variability Evaluation: ", filterVariability)
-            print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", meanCoords[-1])
+            print("First Target coord vs first element added to currentTrialList: ", start, " | ", meanCoords[-1])
             #print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", meanCoords[0])
 
             screen.fill("black")
             for i in range(len(meanCoords) - 1):
                 #print(desCoords[i])
-                pygame.draw.line(screen, "cyan", meanCoords[i], meanCoords[i+1], 2)
+                pygame.draw.line(screen, "aqua", meanCoords[i], meanCoords[i+1], 2)
             
             for i in range(len(currentTrialList) - 1):
                 pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 2)
 
-            pygame.draw.line(screen, "gray", start, target_ctr, 3)
+            pygame.draw.line(screen, "gray", start, target_ctr, 2)
             pygame.display.update()
             time.sleep(2)
 
@@ -384,12 +422,12 @@ for h in range(len(data["trials"])):
             screen.fill("black")
             for i in range(len(desCoords) - 1):
                 #print(desCoords[i])
-                pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 2)
+                pygame.draw.line(screen, "aqua", desCoords[i], desCoords[i+1], 2)
             
             for i in range(len(currentTrialList) - 1):
                 pygame.draw.line(screen, "green", currentTrialList[i][0], currentTrialList[i+1][0], 2)
 
-            pygame.draw.line(screen, "gray", start, target_ctr, 3)
+            pygame.draw.line(screen, "gray", start, target_ctr, 2)
             pygame.display.update()
             time.sleep(2)
 

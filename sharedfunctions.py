@@ -2,9 +2,9 @@ import math
 import numpy as np
 
 
-TIME_COMPARE_SECONDS = 0.2
+TIME_COMPARE_SECONDS = 0.5
 
-BREAKVAL = 3
+BREAKVAL = 2
 
 MAX_ANGLE = 90.0
 
@@ -242,7 +242,7 @@ def meanFilter(coordList, timeCmp):
 def alphaFunc(uk):
 
     min = 1
-    max = 100
+    max = 165
 
     if (uk < min):
         return 0
@@ -263,6 +263,7 @@ def vectorize(coords, lastCoords):
 
     return (vx, vy)
 
+# not currently used. Helped in debugging
 def devectorize(desVel, absCoords):
 
     ax = desVel[0] + absCoords[0]
@@ -284,10 +285,11 @@ def desFilter(coordList, desVels, bTrend):
         # step 1: initialize s1 = z1 and b1 = z1 - z0. Then, iterate.
         if (len(desVels) == 0 and len(coordList) > 2):
             desVels.insert(0, vectorize(coordList[0][0], coordList[1][0]))
+            print("Comparing initial desVel to initial coordVel: ", desVels[0], vectorize(coordList[0][0], coordList[1][0]))
             #print(coordList[0][0])
             
             bTrend.insert(0, tuple(np.subtract(vectorize(coordList[0][0], coordList[1][0]), vectorize(coordList[1][0], coordList[2][0]))))
-            print("this should be run exactly once")
+            #print("this should be run exactly once")
             #print(bFunc)
 
 
@@ -306,12 +308,6 @@ def desFilter(coordList, desVels, bTrend):
             aFunc = alphaFunc(uk)
             gFunc = gammaFunc(uk)
 
-            #print(aFunc[0])
-            #print("afunc is ", aFunc)
-            #print(type(aFunc))
-
-            #print(type(desVels[0][0]))
-            #print(bTrend)
 
             # Step 3: Compute Sk using alpha. The resulting vector denotes the smoothed value
             sCoordX = (aFunc * coord[0]) + ((1 - aFunc) * (desVels[0][0] + bTrend[0][0]))

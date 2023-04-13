@@ -30,17 +30,20 @@ SCREENHEIGHT = 900
 
 
 output = {
-    "taskName": "Drawing",
+    "taskName": "Plotting",
     "trials": {
         0: {
             "mouseEvents": {
 
+            },
+            "target": {
+    
             }
         }
     },
     "screenAvailWidth": SCREENWIDTH,
     "screenAvailHeight": SCREENHEIGHT,
-    "startTime": (int)(time.time() * 1000)
+    "startTime": 0
     
 }
 
@@ -73,27 +76,44 @@ sAmp = 50
 numPeriods = 5
 numSamples = sRate * numPeriods
 
-sin = np.linspace (0, numPeriods, numSamples) + np.random.normal(size=300, scale=0.005)
+sinTime = np.linspace (0, numPeriods, numSamples) # + np.random.normal(size=300, scale=0.005)
 
 f1 = lambda x: sAmp*np.sin(sFreq*2*np.pi*x)
 
-sampled_f1 = [f1(i) for i in sin]
+sampled_f1 = [f1(i) for i in sinTime]
 #print(sampled_f1)
-
-sinList = [[sin[i], sampled_f1[i]] for i in range(0, len(sin))]
-
-for i in sinList:
+spacedX = []
+for i in range(len(sinTime)):
 
     # move the X coordinate 100 pixels right, and spread the points apart by 500x
-    i[0] = (i[0]*500) + 100
+    spacedX.insert(i, ((sinTime[i]*500) + 100))
+    
+    sampled_f1[i] = (sampled_f1[i] + 500)
 
-    # add 500 to each Y so that the sine wave is closer to the middle of the screen
-    i[1] = i[1] + 500
+    #print(sinTime[i] * 1000)
+
+
+sinList = [[spacedX[i], sampled_f1[i]] for i in range(0, len(sinTime))]
 
 #print(sinList)
+#print(t)
 
 sinLineStart = (100, 500)
 sinLineEnd = (10000, 500)
+
+addTarget = {
+    "center": {
+        "X": sinLineEnd[0],
+        "Y": sinLineEnd[1]
+    },
+    "start": {
+        "X": sinLineStart[0],
+        "Y": sinLineEnd[1]
+    }
+}
+
+
+output["trials"][0]["target"].update(addTarget)
 
 coordList = []
 
@@ -114,7 +134,7 @@ if (FILTER_TYPE == 3):
 
 counter = 0
 
-for g in sinList: # main game loop
+for g in range(len(sinTime)): # main game loop
     
     # clock.tick(FPS)
     screen.fill("black")
@@ -132,15 +152,13 @@ for g in sinList: # main game loop
 
 
     # don't just spew out the plot all at once, especially since some of the functions rely on time
-    time.sleep(0.01)
-    coords = g
+    #time.sleep(0.01)
+    coords = sinList[g]
     skipped = False
 
-    # Don't add repeated coordinates
-    if len(coordList) == 0 or coordList[0][0] != coords:
-        coordList.insert(0, (coords, int(time.time() * 1000)))
-    else:
-        skipped = True
+
+    coordList.insert(0, (coords, sinTime[g]*1000))
+
 
 
     if (len(coordList) > 2):
@@ -157,10 +175,11 @@ for g in sinList: # main game loop
     if (counter == 0):
         mouseAction = "mouseenter"
     
+
     addCoord = {
         counter: {
             "e": mouseAction,
-            "t": (int)(time.time() * 1000),
+            "t": sinTime[g] * 1000,
             "p": {
                 "X": coords[0],
                 "Y": coords[1]
@@ -257,7 +276,7 @@ for g in sinList: # main game loop
 
         if (len (meanCoords) > 2):
             for i in range(len(meanCoords) - 1):
-                pygame.draw.line(screen, "cyan", meanCoords[i], meanCoords[i+1], 1)
+                pygame.draw.line(screen, "aqua", meanCoords[i], meanCoords[i+1], 1)
 
 
     elif (FILTER_TYPE == 3 ):
@@ -291,7 +310,7 @@ for g in sinList: # main game loop
 
         if (len(desCoords)> 2):
             for i in range(len(desCoords) - 1):
-                pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 1)
+                pygame.draw.line(screen, "aqua", desCoords[i], desCoords[i+1], 1)
                 
 
         
@@ -306,6 +325,7 @@ for g in sinList: # main game loop
 
     pygame.display.update()
 
+export(output)
 pygame.quit()
     
 

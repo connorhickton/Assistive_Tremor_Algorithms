@@ -48,7 +48,7 @@ output = {
 def export(output):
     endTimeAdd = {"endTime": (int)(time.time() * 1000)}
     output.update(endTimeAdd)
-    with open("test.json", "w") as outfile:
+    with open("testDraw.json", "w") as outfile:
         json.dump(output, outfile)
 
 
@@ -117,7 +117,7 @@ while not done: # main game loop
         for i in range(len(coordList)-1):
             
             #if i < 50:
-            pygame.draw.line(screen, "green", coordList[i][0], coordList[i+1][0], 1)
+            pygame.draw.line(screen, "green", coordList[i][0], coordList[i+1][0], 3)
             #else:
                 #pygame.draw.line(screen, "blue", coordList[i][0], coordList[i+1][0], 1)
 
@@ -213,7 +213,7 @@ while not done: # main game loop
             out = scipy.interpolate.splev(u3,tck)
             
             for i in range(len(out[0]) - 1):
-                pygame.draw.line(screen, "white", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
+                pygame.draw.line(screen, "aqua", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
     
 
     # Mean Filter Code
@@ -228,7 +228,7 @@ while not done: # main game loop
 
         if (len (meanCoords) > 2):
             for i in range(len(meanCoords) - 1):
-                pygame.draw.line(screen, "cyan", meanCoords[i], meanCoords[i+1], 1)
+                pygame.draw.line(screen, "aqua", meanCoords[i], meanCoords[i+1], 3)
 
 
     elif (FILTER_TYPE == 3 ):
@@ -262,7 +262,7 @@ while not done: # main game loop
 
         if (len(desCoords)> 2):
             for i in range(len(desCoords) - 1):
-                pygame.draw.line(screen, "cyan", desCoords[i], desCoords[i+1], 1)
+                pygame.draw.line(screen, "aqua", desCoords[i], desCoords[i+1], 3)
                 
 
         
