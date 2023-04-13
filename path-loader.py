@@ -203,7 +203,8 @@ for h in range(len(data["trials"])):
             lastdir = direction
             oldElement = getOldElement(coordList, TIME_COMPARE_SECONDS)
             direction = getDirection(coordList[0][0], oldElement)
-
+            if(len(meanBreakpoints) == 0):
+                meanBreakpoints.insert(0, coords)
 
             # breakpoint 1 code
             

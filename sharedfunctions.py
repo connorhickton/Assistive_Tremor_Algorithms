@@ -14,8 +14,7 @@ MAX_ANGLE = 90.0
 # 1 means B-spline and breakpoint filtering, a la Banihashem et al
 # 2 means mean filtering/moving average
 # 3 means Double Exponential Smoothing filter
-FILTER_TYPE = 3
-FILTER_TYPE = 3
+FILTER_TYPE = 1
 
 # If FILTER_TYPE is 1 (B-spline and breakpoint), then you can choose between two breakpoint algorithms
 # 1 means Banihashem's breakpoint algorithm

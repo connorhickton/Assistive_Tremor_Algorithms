@@ -25,8 +25,8 @@ BREAKVAL = getBreakVal()
 TIME_COMPARE_SECONDS = getTimeCmp()
 
 
-SCREENWIDTH = 1280
-SCREENHEIGHT = 720
+SCREENWIDTH = 1600
+SCREENHEIGHT = 900
 
 
 output = {
@@ -65,7 +65,35 @@ clock = pygame.time.Clock()
 pygame.display.set_caption('Pygame Mouse Tracking Prototype')
 
 
+# create a sine wave
+# https://www.mkdynamics.net/current_projects/sine_wv_50Hz.html
+sRate = 60
+sFreq = 6
+sAmp = 50
+numPeriods = 5
+numSamples = sRate * numPeriods
 
+sin = np.linspace (0, numPeriods, numSamples) + np.random.normal(size=300, scale=0.005)
+
+f1 = lambda x: sAmp*np.sin(sFreq*2*np.pi*x)
+
+sampled_f1 = [f1(i) for i in sin]
+#print(sampled_f1)
+
+sinList = [[sin[i], sampled_f1[i]] for i in range(0, len(sin))]
+
+for i in sinList:
+
+    # move the X coordinate 100 pixels right, and spread the points apart by 500x
+    i[0] = (i[0]*500) + 100
+
+    # add 500 to each Y so that the sine wave is closer to the middle of the screen
+    i[1] = i[1] + 500
+
+#print(sinList)
+
+sinLineStart = (100, 500)
+sinLineEnd = (10000, 500)
 
 coordList = []
 
@@ -86,10 +114,12 @@ if (FILTER_TYPE == 3):
 
 counter = 0
 
-while not done: # main game loop
+for g in sinList: # main game loop
     
     # clock.tick(FPS)
     screen.fill("black")
+
+    pygame.draw.line(screen, "gray", sinLineStart, sinLineEnd, 1)
     
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -101,9 +131,9 @@ while not done: # main game loop
                 done = True
 
 
-
-    
-    coords = pygame.mouse.get_pos()
+    # don't just spew out the plot all at once, especially since some of the functions rely on time
+    time.sleep(0.01)
+    coords = g
     skipped = False
 
     # Don't add repeated coordinates
@@ -148,7 +178,6 @@ while not done: # main game loop
         direction = getDirection(coordList[0][0], oldElement)
         if(len(meanBreakpoints) == 0):
             meanBreakpoints.insert(0, coords)
-
         # breakpoint1 code
         
         if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
