@@ -25,8 +25,8 @@ BREAKVAL = getBreakVal()
 TIME_COMPARE_SECONDS = getTimeCmp()
 
 
-SCREENWIDTH = 1280
-SCREENHEIGHT = 720
+SCREENWIDTH = 1920
+SCREENHEIGHT = 1080
 
 
 output = {
@@ -74,6 +74,7 @@ if (FILTER_TYPE == 1):
     lastdir = ""
     breakpoints = []
     meanBreakpoints = []
+    lastBreakpoint = 0
 
 if (FILTER_TYPE == 2):
     meanCoords = []
@@ -149,10 +150,13 @@ while not done: # main game loop
         if(len(meanBreakpoints) == 0):
             meanBreakpoints.insert(0, coords)
 
+        #print("DIRECTION: ", direction)
+        #print("LASTDIR:   ", lastdir)
         # breakpoint1 code
         
-        if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
+        if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL) ): #or ((time.time() *1000) - lastBreakpoint) > 500
             # print("BREAKPOINT DETECTED!!!")
+            lastBreakpoint = time.time() * 1000
             breakpoints.insert(0, coords)
 
             # mean filtering

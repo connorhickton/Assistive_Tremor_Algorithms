@@ -2,9 +2,9 @@ import math
 import numpy as np
 
 
-TIME_COMPARE_SECONDS = 0.5
+TIME_COMPARE_SECONDS = 0.2
 
-BREAKVAL = 2
+BREAKVAL = 4
 
 MAX_ANGLE = 90.0
 
@@ -14,12 +14,13 @@ MAX_ANGLE = 90.0
 # 1 means B-spline and breakpoint filtering, a la Banihashem et al
 # 2 means mean filtering/moving average
 # 3 means Double Exponential Smoothing filter
-FILTER_TYPE = 1
+FILTER_TYPE = 3
 
 # If FILTER_TYPE is 1 (B-spline and breakpoint), then you can choose between two breakpoint algorithms
 # 1 means Banihashem's breakpoint algorithm
 # 2 means Connor's (my own)
 
+# THIS IS NOT FUNCTIONAL YET, DO NOT USE
 BREAKPOINT_TYPE = 1
 
 
@@ -174,7 +175,7 @@ def getAngle(a, b, c):
 
 
 # my own breakpoint algorithm. Looks at three coordinates: The current mouse position, the coordinates X seconds ago, and the coordinates X seconds again before that.
-# It looks at the combined angle between these three points. If the angle is greater than 90 degrees, a breakpoint is registered.
+# It looks at the combined angle between these three points. If the angle is greater than MAX_ANGLE degrees, a breakpoint is registered.
 def breakpoint2(coordList, BREAKVAL, timeCmp):
     coord1 = coordList[0][0]
     coord2 = getOldElement(coordList, timeCmp)
@@ -207,7 +208,7 @@ def breakpoint2(coordList, BREAKVAL, timeCmp):
     if angle < MAX_ANGLE or angle > (360 - MAX_ANGLE):
         print("index: ", index)
         print(getAngle(coord1, coord2, coord3))
-        return coord2
+        return coord3
     else:
         return False
     
@@ -285,13 +286,17 @@ def desFilter(coordList, desVels, bTrend):
         # step 1: initialize s1 = z1 and b1 = z1 - z0. Then, iterate.
         if (len(desVels) == 0 and len(coordList) > 2):
             desVels.insert(0, vectorize(coordList[0][0], coordList[1][0]))
-            print("Comparing initial desVel to initial coordVel: ", desVels[0], vectorize(coordList[0][0], coordList[1][0]))
-            #print(coordList[0][0])
             
-            bTrend.insert(0, tuple(np.subtract(vectorize(coordList[0][0], coordList[1][0]), vectorize(coordList[1][0], coordList[2][0]))))
-            #print("this should be run exactly once")
-            #print(bFunc)
+            #print(coordList[0][0])
+            #firstBTrend = tuple(np.subtract(vectorize(coordList[0][0], coordList[1][0]), vectorize(coordList[1][0], coordList[2][0])))
+            
+            firstBTrend = vectorize(coordList[0][0], coordList[1][0])
 
+            # this algo works WAY better when the first Btrend is set to (0,0) instead of firstBTrend?
+            bTrend.insert(0, (0,0))
+            #print("this should be run exactly once")
+            print(firstBTrend)
+            print("Comparing initial desVel to initial coords: ", desVels[0], coordList[0][0], coordList[1][0])
 
         elif (len(desVels) > 0):
 

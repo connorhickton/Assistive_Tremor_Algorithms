@@ -58,6 +58,9 @@ pygame.display.set_caption('Pygame Mouse Replaying Prototype')
 coordList = []
 currentTrialList = []
 
+filterVariabilities = []
+rawVariabilities = []
+
 if (FILTER_TYPE == 1):
     direction = ""
     lastdir = ""
@@ -65,6 +68,7 @@ if (FILTER_TYPE == 1):
     breakpoints = []
     meanBreakpoints = []
     splineCoords = []
+    lastBreakpoint = 0
 
 if (FILTER_TYPE == 2):
     meanCoords = []
@@ -120,6 +124,8 @@ for h in range(len(data["trials"])):
             print ("Movement Variability Evaluation: ", variability)
             print("First Target coord vs first element added to currentTrialList: ", last_start, " | ", currentTrialList[-1])
             #print("Last Target coord vs last element added to currentTrialList: ", last_target_ctr, " | ", currentTrialList[0])
+
+            rawVariabilities.insert(0, variability)
             currentTrialList = []
 
     elif (data["taskName"] == "Plotting"):
@@ -212,16 +218,21 @@ for h in range(len(data["trials"])):
 
 
         if (FILTER_TYPE == 1):
+            
+            if (len(currentTrialList) == 0):
+                continue
+
             lastdir = direction
-            oldElement = getOldElement(coordList, TIME_COMPARE_SECONDS)
-            direction = getDirection(coordList[0][0], oldElement)
+            oldElement = getOldElement(currentTrialList, TIME_COMPARE_SECONDS)
+            direction = getDirection(currentTrialList[0][0], oldElement)
             if(len(meanBreakpoints) == 0):
                 meanBreakpoints.insert(0, coords)
 
             # breakpoint 1 code
             
-            if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
+            if (breakpoint1(direction, lastdir, currentTrialList[0][0], oldElement, BREAKVAL) or ((currentTrialList[0][1]) - lastBreakpoint) > 500): #
                 # print("BREAKPOINT DETECTED!!!")
+                lastBreakpoint = currentTrialList[0][1]
                 breakpoints.insert(0, coords)
 
                 # mean filtering
@@ -269,10 +280,12 @@ for h in range(len(data["trials"])):
 
 
                 for i in range(len(out[0]) - 1):
-                    pygame.draw.line(screen, "white", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
                     if (len(currentTrialList) > 0):
-                        splineCoords.insert(0, (int(out[0][i]), int(out[1][i])))
-                        #print(splineCoords[0])
+                        pygame.draw.line(screen, "aqua", (out[0][i],out[1][i]), (out[0][i+1],out[1][i+1]),  3)
+                
+
+                splineCoords = list(zip(out[0], out[1]))
+                #print(splineCoords)
 
         elif(FILTER_TYPE == 2):
             
@@ -378,7 +391,8 @@ for h in range(len(data["trials"])):
 
             pygame.draw.line(screen, "gray", start, target_ctr, 2)
             pygame.display.update()
-            time.sleep(2)
+            #time.sleep(1)
+            filterVariabilities.insert(0, filterVariability)
         
 
         direction = ""
@@ -407,7 +421,8 @@ for h in range(len(data["trials"])):
 
             pygame.draw.line(screen, "gray", start, target_ctr, 2)
             pygame.display.update()
-            time.sleep(2)
+            #time.sleep(1)
+            filterVariabilities.insert(0, filterVariability)
 
         meanCoords = []
 
@@ -429,7 +444,8 @@ for h in range(len(data["trials"])):
 
             pygame.draw.line(screen, "gray", start, target_ctr, 2)
             pygame.display.update()
-            time.sleep(2)
+            time.sleep(1)
+            filterVariabilities.insert(0, filterVariability)
 
 
 
@@ -440,8 +456,13 @@ for h in range(len(data["trials"])):
         bTrend = []
         beginningPos = (None, None)
     
+print(filterVariabilities)
+print("AVERAGE FILTER VARIABILITY")
+print(np.mean(filterVariabilities))
 
 
+print("AVERAGE RAW DATA VARIABILITY")
+print(np.mean(rawVariabilities))
 pygame.quit()
 
 

@@ -25,7 +25,7 @@ BREAKVAL = getBreakVal()
 TIME_COMPARE_SECONDS = getTimeCmp()
 
 
-SCREENWIDTH = 1600
+SCREENWIDTH = 1800
 SCREENHEIGHT = 900
 
 
@@ -71,9 +71,9 @@ pygame.display.set_caption('Pygame Mouse Tracking Prototype')
 # create a sine wave
 # https://www.mkdynamics.net/current_projects/sine_wv_50Hz.html
 sRate = 60
-sFreq = 6
+sFreq = 8
 sAmp = 50
-numPeriods = 5
+numPeriods = 3
 numSamples = sRate * numPeriods
 
 sinTime = np.linspace (0, numPeriods, numSamples) # + np.random.normal(size=300, scale=0.005)
@@ -122,6 +122,7 @@ if (FILTER_TYPE == 1):
     lastdir = ""
     breakpoints = []
     meanBreakpoints = []
+    lastBreakpoint = 0
 
 if (FILTER_TYPE == 2):
     meanCoords = []
@@ -199,8 +200,9 @@ for g in range(len(sinTime)): # main game loop
             meanBreakpoints.insert(0, coords)
         # breakpoint1 code
         
-        if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL)):
+        if (breakpoint1(direction, lastdir, coordList[0][0], oldElement, BREAKVAL) or ((coordList[0][1]) - lastBreakpoint) > 500):
             # print("BREAKPOINT DETECTED!!!")
+            lastBreakpoint = coordList[0][1]
             breakpoints.insert(0, coords)
 
             # mean filtering
