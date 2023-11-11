@@ -1,7 +1,7 @@
 # path-loader.py
-# Choose a file from the dataset (right now: only one that's of the "pointing" task, and on the "DESKTOP" deviceType), and you can view a replay of the recorded data.
+# Choose a file from the dataset that's of the "pointing" task, and on the "DESKTOP" deviceType, and you can view a replay of the recorded data.
 # Author: Connor Hickton
-# 
+
 
 import pygame
 import json
@@ -14,7 +14,6 @@ from tkinter.filedialog import askopenfilename
 import numpy as np
 import scipy.interpolate
 from scipy.interpolate import BSpline, splrep, splev
-# import matplotlib.pyplot as plt
 from sharedfunctions import *
 
 
@@ -46,12 +45,8 @@ screenAvailHeight = data["screenAvailHeight"]
 
 pygame.init()
 screen = pygame.display.set_mode((screenAvailWidth, screenAvailHeight))   # setting to 0,0 will default to the screen's resolution
-                                                # add , pygame.NOFRAME after coords for borderless
-
 
 pygame.display.set_caption('Pygame Mouse Replaying Prototype')
-
-
 
 
 
@@ -84,7 +79,8 @@ if (FILTER_TYPE == 3):
 last = data['startTime']
 #print(last)
 
-# AWFUL code that lets me put off understanding the awful mix of list/dicts/json that the original dataset is made of. So this program can just read both...
+# The original dataset I'm trying to read from is an awful mix of list/dicts/json. 
+# So this code allows the program to read both from the dataset, and from my custom files created by path-drawer.py and path-plotter.py.
 keysAreStrings = False
 try:
     keys = list(data["trials"].keys())
@@ -158,27 +154,16 @@ for h in range(len(data["trials"])):
 
 
 
-
-
-
-
-
-
-
         if (keysAreStrings):
             j = data['trials'][h]['mouseEvents'][str(count)]
         
-        # else:
-            #print("this is j: ",j, " and j is type: ", type(j))
 
-        # bad but working way to space out the events to show the proper timing when the data was recorded   
-        # If replaying data from path-drawer.py, then it appears slow. 
+        # This is a way to space out the events to show the proper timing when the data was recorded   
+        # If replaying data from path-drawer.py, then it appears slower than real-time. 
         # However, it should be accurate in terms of time-based data, as if it were full speed.
-        # print(j["t"], " minus ", last)
+
         time.sleep((j["t"] - last)/1000)
         last = j["t"]
-        #print (j["t"], "     ", (j["t"] - last))
-
 
 
         # press ESC to exit the window at any time
@@ -189,6 +174,7 @@ for h in range(len(data["trials"])):
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
         
+
         # get next set of mouse coords from JSON
         coords = (j["p"]["X"], j["p"]["Y"])
         coordTime = (j["t"])
@@ -217,6 +203,7 @@ for h in range(len(data["trials"])):
                 pygame.draw.line(screen, "green", coordList[i][0], coordList[i+1][0], 3)
 
 
+        # Filter type 1 is breakpoint detection.
         if (FILTER_TYPE == 1):
             
             if (len(currentTrialList) == 0):
@@ -230,6 +217,7 @@ for h in range(len(data["trials"])):
 
             # breakpoint 1 code
             
+            
             if (breakpoint1(direction, lastdir, currentTrialList[0][0], oldElement, BREAKVAL) or ((currentTrialList[0][1]) - lastBreakpoint) > 500): #
                 # print("BREAKPOINT DETECTED!!!")
                 lastBreakpoint = currentTrialList[0][1]
@@ -241,14 +229,9 @@ for h in range(len(data["trials"])):
                     by = int((breakpoints[0][1] + breakpoints[1][1])/2)
                     
                     meanBreakpoints.insert(0, (bx, by))
-            """
 
-            # breakpoint2 code
-            checkBreakpoint = breakpoint2(coordList, BREAKVAL, TIME_COMPARE_SECONDS)
-            if (checkBreakpoint is not False):
-                breakpoints.insert(0, checkBreakpoint)
-            """
-            # """"
+            # "breakpoint 2" code used to be located here - 
+            # but the breakpoint 2 function never worked very well, so I'll consider it out of scope and cut from the program
             
             if (len(breakpoints) > 2):
                 for i in range(len(breakpoints)):
@@ -259,8 +242,7 @@ for h in range(len(data["trials"])):
                 for i in range(len(meanBreakpoints)):
                     pygame.draw.circle(screen, "purple", meanBreakpoints[i], 5, 2)
             
-            # second attempt at b splines
-            # it kinda works!!!
+            # Code for creating B-splines from breakpoints
             if (len(meanBreakpoints) > 3):
                 ctr = np.array(meanBreakpoints)
 
@@ -287,11 +269,10 @@ for h in range(len(data["trials"])):
                 splineCoords = list(zip(out[0], out[1]))
                 #print(splineCoords)
 
+
+
+        # Filter type 2 is a mean filter
         elif(FILTER_TYPE == 2):
-            
-            # coordList has another dimension, so to plug this into desFilter I need to add that dimension, or else I have to rewrite the whole thing
-            # nvm fixed this
-            #currentTrialPad = [currentTrialList]
 
             if (len(currentTrialList) > 2):
                 mean = meanFilter(currentTrialList, TIME_COMPARE_SECONDS)
@@ -305,6 +286,9 @@ for h in range(len(data["trials"])):
                 for i in range(len(meanCoords) - 1):
                     pygame.draw.line(screen, "aqua", meanCoords[i], meanCoords[i+1], 3)
 
+
+
+        # Filter type 3 is a Double Exponential Smoothing filter
         elif (FILTER_TYPE == 3):
         
             if (beginningPos == (None, None) and len(currentTrialList) > 0):

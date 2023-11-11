@@ -20,11 +20,8 @@ FILTER_TYPE = 3
 # 1 means Banihashem's breakpoint algorithm
 # 2 means Connor's (my own)
 
-# THIS IS NOT FUNCTIONAL YET, DO NOT USE
+# Only one type of breakpoint is currently supported.
 BREAKPOINT_TYPE = 1
-
-
-
 
 
 def getTimeCmp():
@@ -173,8 +170,10 @@ def getAngle(a, b, c):
 
 
 
+# This is my attempt at a second type of breakpoint algorithm, using a radically different approach to Banihashem et al. 
+# It has potential, but didn't end up used in the final project.
 
-# my own breakpoint algorithm. Looks at three coordinates: The current mouse position, the coordinates X seconds ago, and the coordinates X seconds again before that.
+# Looks at three coordinates: The current mouse position, the coordinates X seconds ago, and the coordinates X seconds again before that.
 # It looks at the combined angle between these three points. If the angle is greater than MAX_ANGLE degrees, a breakpoint is registered.
 def breakpoint2(coordList, BREAKVAL, timeCmp):
     coord1 = coordList[0][0]
@@ -295,8 +294,8 @@ def desFilter(coordList, desVels, bTrend):
             # this algo works WAY better when the first Btrend is set to (0,0) instead of firstBTrend?
             bTrend.insert(0, (0,0))
             #print("this should be run exactly once")
-            print(firstBTrend)
-            print("Comparing initial desVel to initial coords: ", desVels[0], coordList[0][0], coordList[1][0])
+            #print(firstBTrend)
+            #print("Comparing initial desVel to initial coords: ", desVels[0], coordList[0][0], coordList[1][0])
 
         elif (len(desVels) > 0):
 

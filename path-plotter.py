@@ -1,5 +1,5 @@
-# path-drawer.py
-# Draws your mouse movements on the window, and detects "breakpoints" (sudden direction changes) and stoppages.
+# path-plotter.py
+# Used to draw predetermined paths - in this case, a sine wave is generated and plotted to the json file output.
 # Messier program than its sibling path-loader.py. Probably more active development.
 # Lots of old scraps of code from moot tests and ideas. 
 # Author: Connor Hickton
@@ -81,8 +81,10 @@ sinTime = np.linspace (0, numPeriods, numSamples) # + np.random.normal(size=300,
 f1 = lambda x: sAmp*np.sin(sFreq*2*np.pi*x)
 
 sampled_f1 = [f1(i) for i in sinTime]
-#print(sampled_f1)
+
 spacedX = []
+
+
 for i in range(len(sinTime)):
 
     # move the X coordinate 100 pixels right, and spread the points apart by 500x
@@ -95,8 +97,6 @@ for i in range(len(sinTime)):
 
 sinList = [[spacedX[i], sampled_f1[i]] for i in range(0, len(sinTime))]
 
-#print(sinList)
-#print(t)
 
 sinLineStart = (100, 500)
 sinLineEnd = (10000, 500)
@@ -191,7 +191,7 @@ for g in range(len(sinTime)): # main game loop
 
     output["trials"][0]["mouseEvents"].update(addCoord)
 
-
+    # B-Spline and Breakpoint Code
     if(FILTER_TYPE == 1):
         lastdir = direction
         oldElement = getOldElement(coordList, TIME_COMPARE_SECONDS)
@@ -242,8 +242,7 @@ for g in range(len(sinTime)): # main game loop
                 pygame.draw.circle(screen, "purple", meanBreakpoints[i], 5, 2)
 
 
-        # second attempt at b splines
-        # it kinda works!!!
+        # B-spline Code
         if (event.type == pygame.MOUSEBUTTONUP or len(meanBreakpoints) > 3):
             ctr = np.array(meanBreakpoints)
 
@@ -280,7 +279,7 @@ for g in range(len(sinTime)): # main game loop
             for i in range(len(meanCoords) - 1):
                 pygame.draw.line(screen, "aqua", meanCoords[i], meanCoords[i+1], 1)
 
-
+    # Double Exponential Smoothing code
     elif (FILTER_TYPE == 3 ):
         
         if (beginningPos == (None, None)):
@@ -302,11 +301,6 @@ for g in range(len(sinTime)): # main game loop
 
                 desCoords.insert(0, (desX, desY))
 
-                #print("descoords: ", desCoords[0])
-                #print("desvels: ", desVels[0])
-                #print("btrend: ", bTrend[0])
-
-
         #realLocY = sum(list(zip(*desCoords[1]))) + beginningPos[1]
         #print(realLocX, realLocY)
 
@@ -315,11 +309,6 @@ for g in range(len(sinTime)): # main game loop
                 pygame.draw.line(screen, "aqua", desCoords[i], desCoords[i+1], 1)
                 
 
-        
-
-
-
-    
 
     # print("\n")
 
